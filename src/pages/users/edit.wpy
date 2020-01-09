@@ -1,0 +1,204 @@
+<style lang="less">
+.submit-button {
+    background-color: #221817;
+    color: #c6b499;
+    border-color: #221817;
+    border-radius: 10rpx;
+    width: 90%;
+    height: 88rpx;
+    line-height: 88rpx;
+    margin: 50rpx auto;
+    display: block;
+}
+</style>
+
+<template>
+    <view class="page">
+        <van-notify id="van-notify" />
+        <form bindsubmit="update">
+        <van-cell-group>
+        <van-field
+            value="{{ user.name }}"
+            clearable
+            label="姓名"
+            name="name"
+            placeholder="请输入姓名"
+            bind:input="inputName"
+            bind:focus="hideBirthdayPicker"
+        />
+
+        <van-field
+            value="{{ user.address }}"
+            type="textarea"
+            label="地址"
+            name="address"
+            autosize
+            placeholder="请输入地址"
+            bind:input="inputAddress"
+            bind:focus="hideBirthdayPicker"
+        />
+
+        <van-field
+            value="{{ birthday }}"
+            name="birthday"
+            clearable
+            readonly="{{ readonly }}"
+            label="生日"
+            placeholder="请选择生日"
+            bind:focus="birthdayPickerVisible"
+        />
+
+        <van-field
+            value="{{ user.email }}"
+            name="email"
+            label="邮箱"
+            autosize
+            placeholder="请输入邮箱地址"
+            bind:input="inputEmail"
+            bind:focus="hideBirthdayPicker"
+        />
+
+        <van-field
+            value="{{ phone ? phone : user.phone }}"
+            label="手机"
+            name="phone"
+            placeholder="请绑定手机号码"
+            readonly="{{ phoneReadonly }}"
+            bind:focus="bindPhone"
+        />
+
+        <van-datetime-picker
+        wx:if="{{ showBirthdayPicker }}"
+        type="date"
+        value="{{ birthdayPickerValue }}"
+        min-date="{{ minBirthday }}"
+        bind:confirm="birthdayPicked"
+        bind:cancel="birthdayPickerVisible"
+        formatter="{{ formatter }}" 
+        />
+
+        <button class="submit-button" formType="submit">提交修改</button>
+        
+        </van-cell-group>
+        </form>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import api from '@/utils/api';
+import util from '@/utils/util';
+import Notify from '../../components/vant/notify/notify'
+
+export default class UsersEdit extends wepy.page {
+  config = {
+    navigationBarTitleText: '编辑个人信息',
+    navigationBarBackgroundColor: '#221817',
+    navigationBarTextStyle: 'white',
+    usingComponents: {
+      'van-datetime-picker': '../../components/vant/datetime-picker/index'
+    }
+  }
+
+  data = {
+    user: null,
+    birthday: null,
+    phone: null,
+    birthdayPickerValue: null,
+    showBirthdayPicker: false,
+    minBirthday: new Date('1900-01-01').getTime(),
+    readonly: false,
+    phoneReadonly: false,
+    currentDate: new Date().getTime(),
+    formatter(type, value) {
+      if (type === 'year') {
+        return `${value}年`;
+      } else if (type === 'month') {
+        return `${value}月`;
+      }
+      return value
+    }
+  };
+
+  methods = {
+    birthdayPickerVisible() {
+      this.showBirthdayPicker = !this.showBirthdayPicker
+      this.readonly = !this.readonly
+    },
+    birthdayPicked(event) {
+      this.birthday = util.formatDate(new Date(event.detail))
+      this.birthdayPickerValue = new Date(this.birthday).getTime()
+      this.showBirthdayPicker = this.readonly = false
+    },
+    hideBirthdayPicker() {
+        this.showBirthdayPicker = this.readonly = false
+    },
+    inputName(e) {
+        this.name = e.detail
+    },
+    inputAddress(e) {
+        this.address = e.detail
+    },
+    inputEmail(e) {
+        this.email = e.detail
+    }, 
+    bindPhone() {
+        this.showBirthdayPicker = this.readonly = false
+        this.phoneReadonly =  true
+        wepy.navigateTo({
+          url: '/pages/users/phone'
+        })
+    }
+  }
+
+  formatter(type, value) {
+    if (type === 'year') {
+      return `${value}年`
+    } else if (type === 'month') {
+      return `${value}月`
+    }
+    return value
+  }
+
+  async update(e) {
+      try {
+        let editResponse = await api.authRequest({
+          url: 'user',
+          method: 'PUT',
+          data: e.detail.value
+        });
+
+        if (editResponse.statusCode === 422) {
+            let errorMessage = editResponse.data.errors[Object.keys(editResponse.data.errors)[0]][0]
+          Notify({ type: 'danger', message: errorMessage, duration: 2000})
+        }
+
+        if (editResponse.statusCode === 201) {
+          this.user = editResponse.data;
+          wepy.setStorageSync('user', editResponse.data)
+          this.$apply()
+
+          Notify({ type: 'success', message: '修改成功！', duration: 2000})
+        }
+      } catch (err) {
+        console.log(err);
+        wepy.showModal({
+          title: '提示',
+          content: '服务器错误，请联系管理员'
+        });
+      }
+    }
+
+  async onShow() {
+    // 获取当前用户信息
+    this.user = await this.$parent.getCurrentUser()
+    this.birthday = this.user.birthday ? this.user.birthday : ''
+    this.birthdayPickerValue = this.user.birthday
+      ? new Date(this.birthday).getTime()
+      : new Date('1990-01-01').getTime()
+    this.phoneReadonly = false
+    this.$apply()
+  }
+}
+</script>
+

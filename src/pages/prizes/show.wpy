@@ -1,0 +1,153 @@
+<style lang="less">
+page {
+    background: #ffffff;
+
+    .prize {
+        padding: 30rpx 40rpx 120rpx 40rpx;
+
+        .prize-name {
+            text-align: center;
+            font-weight: 700;
+            line-height: 56rpx;
+            font-size: 36rpx;
+        }
+
+        .prize-info {
+            display: flex;
+            margin-top: 30rpx;
+
+            view {
+                flex: 1;
+                font-size: 24rpx;
+                color: #aaaaaa;
+                text-align: center;
+            }
+            
+        }
+
+        .prize-description {
+            margin-top: 30rpx;
+            font-size: 28rpx;
+            font-weight: 300;
+        }
+    }
+    .redeem-btn {
+        .van-button {
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+        }
+    }
+}
+</style>
+
+<template>
+    <view class="page">
+        <van-notify id="van-notify" />
+        <van-dialog id="van-dialog" />
+        <view class="prize">
+            <view class="prize-name">{{ prize.name }}</view>
+            <view class="prize-info">
+                <view class="prize-expired-time">
+                    有效期：{{ prize.expired_time ? prize.expired_time / 86400 + '天' : '永久' }}
+                </view>
+                <view class="prize-count">
+                    剩余数量：{{ prize.count ? prize.count : '不限' }}
+                </view>
+            </view>
+            <view class="prize-description">
+                <rich-text nodes="{{ prize.description }}"></rich-text>
+            </view>
+        </view>
+        <van-button color="#221817" 
+        custom-style="color: #c6b499"
+        class="redeem-btn" bind:click="redeem">立即兑换</van-button>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+import Dialog from '../../components/vant/dialog/dialog'
+import Notify from '../../components/vant/notify/notify'
+
+export default class PrizesShow extends wepy.page {
+    config = {
+      navigationBarTitleText: '奖品列表',
+      navigationBarBackgroundColor: '#221817',
+      navigationBarTextStyle: 'white',
+    }
+
+    data = {
+        prize: null
+    }
+
+    methods = {
+        redeem () {
+            Dialog.confirm({
+            title: this.prize.name,
+            message: '有效期：'+ (this.prize.expired_time ? 
+            this.prize.expired_time / 86400 +'天' 
+            : '永久') +
+            '\n所需积分：' + this.prize.points,
+            confirmButtonText: '确认兑换',
+            cancelButtonText: '我再想想'
+            }).then(async () => {
+                try {
+                  let redeemResponse =  await api.authRequest({
+                      method: 'post',
+                    url: 'points_redeem_records/' + this.prize.id,
+                  })
+                  if (redeemResponse.statusCode == 422) {
+                      let errorMessage = redeemResponse.data.message
+                      Notify({ type: 'danger', message: errorMessage, duration: 2000})
+                      return false
+                  }
+                 if (redeemResponse.statusCode == 201) {
+                     Notify({ type: 'success', message: '兑换成功！', duration: 2000, onClose: () => {
+                    wepy.redirectTo({
+                        url: '/pages/prizes/user?active=1'
+                    });
+                    }})
+                 }
+                
+                } catch (err) {
+                    console.log(err)
+                wepy.showModal({
+                    title: '提示',
+                    content: '服务器错误，请联系管理员'
+                })
+                }
+            }).catch(() => {
+            // on cancel
+            });
+        }
+    }
+
+    async getPrize(id) {
+        try {
+        let prizeResponse = await api.authRequest({
+            url: 'point_prizes/' + id,
+        })
+        this.prize = prizeResponse.data
+        let prizeDescription = this.prize.description;
+        this.prize.description = prizeDescription.replace(
+            /<img\s.*(src=".*") style=".*"/gi,
+            '<img $1 style="width:100%;height:auto"'
+        );
+        this.$apply();
+        } catch (err) {
+        wepy.showModal({
+            title: '提示',
+            content: '服务器错误，请联系管理员'
+          })
+        }
+    }
+
+    onLoad(options) {
+        this.getPrize(options.id)
+    }
+}
+</script>
+
+

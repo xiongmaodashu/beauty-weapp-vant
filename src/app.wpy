@@ -1,0 +1,143 @@
+<style lang="less">
+@font-face {
+  font-family: 'iconfont';  /* project id 1574498 */
+  src: url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.eot');
+  src: url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.eot?#iefix') format('embedded-opentype'),
+  url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.woff2') format('woff2'),
+  url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.woff') format('woff'),
+  url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.ttf') format('truetype'),
+  url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.svg#iconfont') format('svg');
+}
+.iconfont{
+    font-family:"iconfont" !important;
+    font-size:40rpx;font-style:normal;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-stroke-width: 0.2px;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+page {
+  background: #efefef;
+}
+.van-tabbar {
+  .van-tabbar-item.van-tabbar-item--active{
+    color: #c6b499;
+  }
+  .van-tabbar-item {
+    color: #3d2c26;
+  }
+}
+
+</style>
+
+<script>
+import wepy from 'wepy'
+import 'wepy-async-function'
+import api from '@/utils/api'
+
+export default class BaseApp extends wepy.app {
+  config = {
+    pages: [
+      'pages/index',
+      'pages/search',
+      'pages/items/category',
+      'pages/items/show',
+      'pages/users/me',
+      'pages/users/edit',
+      'pages/users/phone',
+      'pages/auth/authorization',
+      'pages/orders/create',
+      'pages/orders/confirm',
+      'pages/orders/index',
+      'pages/orders/show',
+      'pages/articles/index',
+      'pages/articles/show',
+      'pages/prizes/index',
+      'pages/prizes/show',
+      'pages/prizes/user',
+      'pages/prizes/use',
+    ],
+    window: {
+      backgroundTextStyle: 'light',
+      navigationBarBackgroundColor: '#fff',
+      navigationBarTitleText: 'WeChat',
+      navigationBarTextStyle: 'black'
+    },
+    tabBar: {
+      custom: true,
+      color: '#aaaaaa',
+      selectedColor: '#ea889f ',
+      list: [{
+        pagePath: 'pages/index',
+      }, {
+        pagePath: 'pages/items/category',
+      }, {
+        pagePath: 'pages/articles/index',
+      }, {
+        pagePath: 'pages/users/me',
+      }]
+    },
+    "permission": {
+    　　"scope.userLocation": {
+    　　　　desc: '你的位置信息将用于小程序导航'
+    　　}
+    },
+    usingComponents: {
+      'van-button': './components/vant/button/index',
+      'van-tabbar': './components/vant/tabbar/index',
+      'van-tabbar-item': './components/vant/tabbar-item/index',
+      'van-icon': './components/vant/icon/index',
+      'van-field': './components/vant/field/index',
+      'van-dialog': './components/vant/dialog/index',
+      'van-cell': './components/vant/cell/index',
+      'van-cell-group': './components/vant/cell-group/index',
+      'van-row': './components/vant/row/index',
+      'van-col': './components/vant/col/index',
+      'van-notify': './components/vant/notify/index',
+      'van-divider': '../../components/vant/divider/index'
+    }
+  }
+
+  async getCurrentUser (refresh = false) {
+    if (!this.checkLogin()) {
+      return null
+    }
+    let user = wepy.getStorageSync('user')
+
+    try {
+      // 登录了但是缓存中没有，请求接口获取 或 请求刷新
+      if (!user || refresh) {
+        let userResponse = await api.authRequest({
+          url: 'user',
+          data: {
+            include: 'customer'
+          }
+        })
+        // 状态码为 200 表示请求成功
+        if (userResponse.statusCode === 200) {
+          user = userResponse.data
+          wepy.setStorageSync('user', user)
+        }
+      }
+    } catch (err) {
+      console.log(err)
+      wepy.showModal({
+        title: '提示',
+        content: '服务器错误，请联系管理员'
+      })
+    }
+
+    return user
+  }
+
+  checkLogin () {
+    return (wepy.getStorageSync('access_token') !== '')
+  }
+
+  constructor () {
+    super()
+    this.use('requestfix')
+    this.use('promisify')
+  }
+}
+</script>

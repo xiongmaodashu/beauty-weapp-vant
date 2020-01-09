@@ -1,0 +1,189 @@
+<style lang="less">
+.submit-button {
+    .van-button--primary {
+        background-color: #221817;
+        color: #c6b499;
+        border-color: #221817;
+        border-radius: 10rpx;
+        height: 88rpx;
+        line-height: 88rpx;
+        margin: 50rpx auto;
+        text-align: center;
+    }
+}
+</style>
+
+<template>
+    <view class="page">
+        <van-notify id="van-notify" />
+        <van-dialog id="van-dialog" bind:getuserinfo="getUserInfo" />
+        <van-cell-group>
+            <van-cell title="项目" value="{{ item.name }}" />
+            <van-cell title="预约日期" value="{{ orderDate }}" label="描述信息" />
+            <van-cell title="预约时间" value="{{ orderTime }}" label="描述信息" />
+            <van-cell title="备注" value="{{ remark == null ? remark : '' }}" label="描述信息" border="{{ false }}" />
+        </van-cell-group>
+        <van-button type="primary" 
+        size="large"
+        class="submit-button" 
+        bind:click="nextStep" @tap="submit">立即预约</van-button>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+import Notify from '../../components/vant/notify/notify'
+import Dialog from '../../components/vant/dialog/dialog'
+
+export default class OrdersConfirm extends wepy.page {
+    config = {
+        navigationBarTitleText: '新增预约',
+        navigationBarBackgroundColor: '#221817',
+        navigationBarTextStyle: 'white',
+    }
+
+    data = {
+        itemId: null,
+        shopId: null,
+        orderDate: null,
+        orderTime: null,
+        remark: null,
+        item: null,
+        user: null
+    }
+    
+    async getItem(id) {
+        try {
+        let itemResponse = await api.request({
+            url: 'items/' + id
+        });
+        let item = itemResponse.data;
+        this.item = item;
+        this.$apply();
+        } catch (err) {
+            console.log(err);
+            wepy.showModal({
+                title: '提示',
+                content: '服务器错误，请联系管理员'
+            });
+        }
+    }
+
+    async submit() {
+        let params = {
+            item_id: this.itemId,
+            shop_id: this.shopId,
+            order_date: this.orderDate,
+            order_time: this.orderTime,
+            remark: this.remark
+        };
+        try {
+            let orderResponse = await api.authRequest({
+                url: 'orders',
+                method: 'post',
+                data: params
+            });
+        if (orderResponse.statusCode == 422) {
+            let errorMessage = orderResponse.data.message
+            // let errorMessage = orderResponse.data.errors[Object.keys(orderResponse.data.errors)[0]][0]
+            Notify({ type: 'danger', message: errorMessage, duration: 2000})
+            return false
+        }
+        if (orderResponse.statusCode == 201) {
+            Notify({ type: 'success', message: '预约成功', duration: 1500, onClose: () => {
+                wepy.redirectTo({
+                    url: '/pages/orders/index?active=1'
+                });
+            }})
+            
+        }
+        } catch (err) {
+            console.log(err);
+            wepy.showModal({
+                title: '提示',
+                content: '服务器错误，请联系管理员'
+            });
+        }
+  }
+
+  async onShow() {
+      let accessToken = wepy.getStorageSync('access_token')
+
+    if (accessToken) {
+        this.user = await this.$parent.getCurrentUser(true)
+        this.$apply()
+        console.log(this.user)
+        if (!this.user.phone) {
+            wepy.navigateTo({
+                url: '/pages/users/phone'
+            })
+        }
+    } else {
+    try {
+        let authResponse = await api.login()
+
+        if (authResponse.statusCode === 201) {
+            this.user = await this.$parent.getCurrentUser(true)
+            if (!this.user.phone) {
+                wepy.navigateTo({
+                    url: '/pages/users/phone'
+                })
+            }
+        } else {
+          Dialog.confirm({
+            title: '微信登录',
+            message: '登录后才可以进行预约等相关操作',
+            confirmButtonOpenType: 'getUserInfo'
+          }).catch(() => {
+            wepy.switchTab({
+                url: '/pages/index'
+              })
+            })
+        }
+    } catch (err) {
+      console.log(err)
+        wepy.showModal({
+        title: '提示',
+        content: '服务器错误，请联系管理员'
+        })
+    }
+    }
+  }
+
+  async getUserInfo(event) {
+    let params = {
+        iv: event.detail.iv,
+        encryptedData: event.detail.encryptedData
+      }
+
+      let loginData = await wepy.login()
+      params.code = loginData.code
+      let authResponse = await api.request({
+        url: 'weapp/bind',
+        data: params,
+        method: 'POST'
+      })
+
+      if (authResponse.statusCode === 201) {
+        wepy.setStorageSync('access_token', authResponse.data.access_token)
+        wepy.setStorageSync('access_token_expired_at', new Date().getTime() + authResponse.data.expires_in * 1000)
+        wepy.navigateTo({
+            url: '/pages/users/phone'
+        })
+        // this.onLoad()
+      }
+  }
+
+    onLoad(options) {
+        this.getItem(options.item_id);
+        this.itemId = options.item_id
+        this.shopId = options.shop_id
+        this.orderDate = options.order_date
+        this.orderTime = options.order_time
+        this.remark = options.remark
+    }
+}
+</script>
+
+

@@ -1,0 +1,5 @@
+<template>
+    <view>
+        auth
+    </view>
+</template>

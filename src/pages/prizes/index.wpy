@@ -1,0 +1,244 @@
+<style lang="less">
+page {
+    background: #ffffff;
+}
+.unbind {
+    padding: 100rpx 40rpx;
+    font-size: 28rpx;
+    font-weight: 300;
+    text-align: center;
+
+    navigator {
+        background: #221817;
+        color: #c6b499;
+        padding: 20rpx 0;
+        margin-top: 80rpx;
+    }
+}
+.page-header {
+    padding: 80rpx 0;
+    .page-title {
+        padding: 40rpx 0 16rpx 0;
+        text-align: center;
+        font-size: 36rpx;
+        font-weight: 700;
+    }
+    .page-subtitle {
+        padding: 12rpx 0 30rpx 0;
+        font-size: 28rpx;
+        color: #292929;
+        text-align: center;
+        font-weight: 100;
+    }
+}
+
+.prize {
+    display: flex;
+    height: 240rpx;
+    padding: 30rpx;
+    background: #ffffff;
+
+    .prize-thumbnail {
+        flex: 1;
+
+        image {
+            width: 100%;
+            height: 100%;
+            max-width: 240prx;
+            max-height: 240rpx;;
+        }
+    }
+    .prize-info {
+        flex: 2;
+        padding: 0 20rpx;
+        &>view {
+            height: 60rpx;
+            line-height: 36rpx;
+        }
+        .prize-name {
+            font-size: 36rpx;
+        }
+
+        .prize-data {
+            display: flex;
+            view {
+                flex: 0 0 50%;
+                font-size: 24rpx;
+            }
+        }
+        .prize-points {
+            strong {
+                color: #c6b499;
+                font-weight: 700;
+            }
+        }
+        .prize-menu {
+            text-align: right;
+            line-height: 72rpx;
+
+            navigator, view {
+                display: inline-block;
+                color: #ffffff;
+                border-radius: 40rpx;
+                padding: 0 20rpx;
+                font-size: 24rpx;
+                height: 50rpx;
+                line-height: 50rpx;
+                margin-left: 10rpx;
+            }
+            .prize-detail-btn {
+                background: #c6b499;
+            }
+            .prize-redeem-btn {
+                background: #221817;
+            }
+        }
+    }
+}
+</style>
+
+<template>
+    <view class="page">
+        <view wx:if="{{ !user.customer }}" class="unbind">
+            <view>您还未绑定手机或绑定的手机号码与开卡预留手机号码不匹配。</view>
+            <navigator url="/pages/users/phone">立即绑定</navigator>
+        </view>
+        <view wx:else>
+            <van-notify id="van-notify" />
+        <view class="page-header">
+            <view class="page-title">奖品列表</view>
+            <van-divider customStyle="width: 230rpx;margin: 0 auto;" />
+            <view class="page-subtitle">Prizes</view>
+        </view>
+        <view class="prizes">
+            <repeat for="{{ prizes }}" item="prize">
+                <view class="prize">
+                    <view class="prize-thumbnail">
+                        <image src="{{ prize.thumbnail }}" />
+                    </view>
+                    <view class="prize-info">
+                        <view class="prize-name">{{ prize.name }}</view>
+                        <view class="prize-points">
+                            所需积分：<strong>{{ prize.points }}</strong>
+                        </view>
+                        <view class="prize-data">
+                            <view>有效期：{{ prize.expired_time ? prize.expired_time / 86400 + '天' : '永久' }}</view>
+                            <view>剩余数量：{{ prize.count ? prize.count : '不限' }}</view>
+                        </view>
+                        <view class="prize-menu">
+                            <navigator class="prize-detail-btn" url="/pages/prizes/show?id={{ prize.id }}">
+                            查看详情
+                            </navigator>
+                            <view class="prize-redeem-btn"
+                            data-id="{{ prize.id }}"
+                            data-name="{{ prize.name }}"
+                            data-expired="{{ prize.expired_time }}"
+                            data-points="{{ prize.points }}"
+                             @tap="redeem">立即兑换</view>
+                        </view>
+                    </view>
+                </view>
+                <van-divider customStyle="width: 90%;margin: 50rpx auto;" borderColor="#dddddd" />
+            </repeat>    
+        </view>
+        <van-dialog id="van-dialog" />
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+import Dialog from '../../components/vant/dialog/dialog'
+import Notify from '../../components/vant/notify/notify'
+
+export default class PrizesIndex extends wepy.page {
+    config = {
+      navigationBarTitleText: '奖品列表',
+      navigationBarBackgroundColor: '#221817',
+      navigationBarTextStyle: 'white',
+
+      'usingComponents': {
+        'van-divider': '../../components/vant/divider/index',
+        'van-card': '../../components/vant/card/index'
+      }
+    }
+
+    data = {
+        user: null,
+        prizes: [],
+        noMoreData: false,
+        page: 1
+    }
+
+    methods = {
+       redeem (event) {
+            Dialog.confirm({
+            title: event.currentTarget.dataset.name,
+            message: '有效期：'+ (event.currentTarget.dataset.expired ? event.currentTarget.dataset.expired / 86400 +'天' 
+            : '永久') +
+            '\n所需积分：' + event.currentTarget.dataset.points,
+            confirmButtonText: '确认兑换',
+            cancelButtonText: '我再想想'
+            }).then(async () => {
+                try {
+                  let redeemResponse =  await api.authRequest({
+                      method: 'post',
+                    url: 'points_redeem_records/' + event.currentTarget.dataset.id,
+                  })
+                  if (redeemResponse.statusCode == 422) {
+                      let errorMessage = redeemResponse.data.message
+                      Notify({ type: 'danger', message: errorMessage, duration: 2000})
+                      return false
+                  }
+                 if (redeemResponse.statusCode == 201) {
+                     Notify({ type: 'success', message: '兑换成功！', duration: 2000, onClose: () => {
+                    wepy.redirectTo({
+                        url: '/pages/prizes/user?active=1'
+                    });
+                    }})
+                 }
+                
+                } catch (err) {
+                    console.log(err)
+                wepy.showModal({
+                    title: '提示',
+                    content: '服务器错误，请联系管理员'
+                })
+                }
+            }).catch(() => {
+            // on cancel
+            });
+        }
+    }
+
+    async getPrizes(page = 1, reset = false) {
+        let params = {};
+        params.page = page
+        try {
+        let prizesResponse = await api.authRequest({
+            url: 'point_prizes',
+            data: params
+        })
+        let prizes = prizesResponse.data.data
+        this.prizes = reset ? prizes : this.prizes.concat(prizes)
+        let pagination = prizesResponse.data.meta.pagination
+        if (pagination.current_page === pagination.total_pages) {
+            this.noMoreData = true
+        }
+        this.$apply()
+        } catch (err) {
+            console.log(err)
+        wepy.showModal({
+            title: '提示',
+            content: '服务器错误，请联系管理员'
+         })
+        }
+    }
+
+    async onLoad() {
+        this.user = await this.$parent.getCurrentUser(true)
+        this.getPrizes(1)
+    }
+}
+</script>

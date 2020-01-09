@@ -1,0 +1,286 @@
+<style lang="less">
+.van-tabs {
+    .van-tabs__line {
+        background: #c6b499;
+    }
+}
+.empty {
+    view {
+        text-align: center;
+        margin-bottom: 28rpx;
+    }
+    .icon {
+        .van-icon {
+            display: block;
+            padding: 80rpx;
+            background: #dfdfdf;
+            border-radius: 50%;
+            font-size: 100rpx;
+        }
+        margin-top: 160rpx;
+    }
+    .message {
+        font-size: 32rpx;
+        color: #221817;
+    }
+    .goto-index {
+        padding: 20rpx;
+        border: 2rpx solid #c6b499;
+        border-radius: 40rpx;
+        width: 320rpx;
+        margin: 20rpx auto;
+        color: #c6b499;
+    }
+}
+.prizes {
+    navigator {
+        width: 90%;
+        margin: 16rpx auto 0 auto;
+    }
+    .van-panel {
+        .content {
+            padding: 40rpx;
+            view {
+                font-size: 28rpx;
+                color: #888888;
+                padding: 8rpx 0;
+            }
+            .expired-time {
+                font-size: 24rpx;
+            }
+        }
+        .van-cell__title {
+            flex: 2;
+        }
+        .van-cell__label {
+            flex: 1;
+        }
+    }
+    .van-divider {
+        width: 60%;
+        margin: 50rpx auto;
+    }
+}
+</style>
+
+<template>
+    <view class="page">
+        <van-tabs active="{{ active }}" bind:click="onClick">
+            <van-tab title="全部">
+                <view class="empty" wx:if="{{ prizes.length == 0 }}">
+                    <view class="icon">
+                        <van-icon name="point-gift-o" />
+                    </view>
+                    <view class="message">您还没有兑换过奖品！</view>
+                    <view class="goto-index" @tap="gotoIndex">
+                        去积分商店看看吧
+                    </view>
+                </view>
+                <view class="prizes" wx:else>
+                    <repeat for="{{ prizes }}" item="prize">
+                        <navigator url="/pages/prizes/use?id={{ prize.id }}">
+                        <van-panel 
+                        title="{{ prize.point_prize.name }}" 
+                        status="{{ prize.status_text }}">
+                        <view class="content">
+                            <view class="reddem-number">兑换码：{{ prize.redeem_number }}</view>
+                            <view class="expired-time">有效期：{{ prize.expired_time }}</view>
+                        </view>
+                        </van-panel>
+                        </navigator>
+                    </repeat>
+                    <van-divider 
+                    contentPosition="center" 
+                    borderColor="#c6b499" 
+                    wx:if="{{ noMoreData }}">
+                    没有更多记录</van-divider>
+                </view>
+            </van-tab>
+            <van-tab title="未使用">
+                <view class="empty" wx:if="{{ prizes.length == 0 }}">
+                    <view class="icon">
+                        <van-icon name="point-gift-o" />
+                    </view>
+                    <view class="message">您还没有未使用的奖品！</view>
+                    <view class="goto-index" @tap="gotoIndex">
+                        去积分商店看看吧
+                    </view>
+                </view>
+                <view class="prizes" wx:else>
+                   <repeat for="{{ prizes }}" item="prize">
+                        <navigator url="/pages/prizes/use?id={{ prize.id }}">
+                        <van-panel 
+                        title="{{ prize.point_prize.name }}" 
+                        status="{{ prize.status_text }}">
+                        <view class="content">
+                            <view class="reddem-number">兑换码：{{ prize.redeem_number }}</view>
+                            <view class="expired-time">有效期：{{ prize.expired_time }}</view>
+                        </view>
+                        </van-panel>
+                        </navigator>
+                    </repeat>
+                </view>
+            </van-tab>
+            <van-tab title="已使用">
+                <view class="empty" wx:if="{{ prizes.length == 0 }}">
+                    <view class="icon">
+                        <van-icon name="point-gift-o" />
+                    </view>
+                    <view class="message">您还没有已使用的奖品！</view>
+                    <view class="goto-index" @tap="gotoIndex">
+                        去积分商店看看吧
+                    </view>
+                </view>
+                <view class="prizes" wx:else>
+                    <repeat for="{{ prizes }}" item="prize">
+                        <navigator url="/pages/prizes/use?id={{ prize.id }}">
+                        <van-panel 
+                        title="{{ prize.point_prize.name }}" 
+                        status="{{ prize.status_text }}">
+                        <view class="content">
+                            <view class="reddem-number">兑换码：{{ prize.redeem_number }}</view>
+                            <view class="expired-time">有效期：{{ prize.expired_time }}</view>
+                        </view>
+                        </van-panel>
+                        </navigator>
+                    </repeat>
+                </view>
+            </van-tab>
+            <van-tab title="已过期">
+                <view class="empty" wx:if="{{ prizes.length == 0 }}">
+                    <view class="icon">
+                        <van-icon name="point-gift-o" />
+                    </view>
+                    <view class="message">您还没有过期奖品！</view>
+                    <view class="goto-index" @tap="gotoIndex">
+                        去积分商店看看吧
+                    </view>
+                </view>
+                <view class="prizes" wx:else>
+                    <repeat for="{{ prizes }}" item="prize">
+                        <navigator url="/pages/prizes/use?id={{ prize.id }}">
+                        <van-panel 
+                        title="{{ prize.point_prize.name }}" 
+                        status="{{ prize.status_text }}">
+                        <view class="content">
+                            <view class="reddem-number">兑换码：{{ prize.redeem_number }}</view>
+                            <view class="expired-time">有效期：{{ prize.expired_time }}</view>
+                        </view>
+                        </van-panel>
+                        </navigator>
+                    </repeat>
+                </view>
+            </van-tab>
+        </van-tabs>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+
+export default class PrizesUser extends wepy.page {
+    config = {
+      navigationBarTitleText: '我的奖品',
+      navigationBarBackgroundColor: '#221817',
+      navigationBarTextStyle: 'white',
+      
+      'usingComponents': {
+            'van-tab': '../../components/vant/tab/index',
+            'van-tabs': '../../components/vant/tabs/index',
+            'van-panel': '../../components/vant/panel/index',
+            
+        }
+    }
+
+    data = {
+        active: 0,
+        prizes: [],
+        status: null,
+        page: 1,
+        noMoreData: false
+    }
+
+    methods = {
+        onClick(event) {
+            this.prizes = []
+            this.page = 1
+            this.noMoreData = false
+            this.tabOrders(event.detail.index)
+        },
+        gotoIndex () {
+          wepy.navigateTo({
+            url: '/pages/prizes/index'
+          })
+        },
+    }
+
+    async getPrizes() {
+     try {
+      let params = {}
+      params.page = this.page
+      if (this.status != null) {
+        params.status = this.status
+      }
+      params.include = 'customer, point_prize'
+      let prizesResponse = await api.authRequest({
+        url: 'points_redeem_records',
+        data: params
+      })
+      if (prizesResponse.statusCode === 200) {
+        let prizes = prizesResponse.data.data
+        this.prizes = this.prizes.concat(prizes)
+        let pagination = prizesResponse.data.meta.pagination
+        if (pagination.current_page === pagination.total_pages) {
+          this.noMoreData = true
+        }
+        this.$apply()
+      }
+    } catch (err) {
+      console.log(err)
+      wepy.showModal({
+        title: '提示',
+        content: '服务器错误，请联系管理员'
+      })
+    }
+  }
+
+    tabOrders(active) {
+        switch (active) {
+            case 0:
+                this.status = null
+                this.getPrizes()
+                break
+            case 1:
+                this.status = 0
+                this.getPrizes()
+                break
+            case 2:
+                this.status = 1
+                this.getPrizes()
+                break
+            case 3: 
+                this.status = -1
+                this.getPrizes()
+                break
+        }
+    }
+
+    async onReachBottom () {
+        if (this.noMoreData) {
+        return
+        }
+        this.page = this.page + 1
+        await this.getPrizes()
+        this.$apply()
+    }
+
+    onLoad (options) {
+        this.active = options.active ? options.active - 0 : 0
+        this.tabOrders(this.active)
+    }
+
+}
+</script>
+
+

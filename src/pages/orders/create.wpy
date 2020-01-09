@@ -1,0 +1,344 @@
+<style lang="less">
+page {
+    background: #f1f1f1;
+}
+.orderable-date-group {
+    padding: 20rpx 8rpx;
+    background: #ffffff;
+    margin-top: 30rpx;
+
+    label {
+        display: block;
+        padding: 24rpx;
+        font-size: 26rpx;
+    }
+    scroll-view {
+        width: 100%;
+        white-space: nowrap;
+        overflow:hidden;
+
+    }
+    .orderable-date {
+        width:180rpx;
+        height:140rpx;
+        line-height: 70rpx;
+        border: 2rpx solid #221817;
+        margin: 0 6rpx;
+        padding:0 16rpx;
+        display: inline-block;
+        font-size: 28rpx;
+    }
+    .active {
+        background: #221817;
+        color: #c6b499;
+        border: 2rpx solid #c6b499;
+    }
+}
+
+.orderable-time-group {
+    display: flex;
+    display: -webkit-flex;
+    flex-flow: wrap;
+    padding: 20rpx 8rpx;
+    background: #ffffff;
+    margin-top: 30rpx;
+
+    label {
+        width: 100%;
+        padding: 24rpx;
+        font-size: 26rpx;
+    }
+    .orderable-time {
+        width:25%;
+        height: 100rpx;
+        padding:0 5rpx;
+        margin-bottom:30rpx;
+        display: inline-block;
+        box-sizing: border-box;
+
+         &>view {
+            padding: 10rpx;
+            border: 2rpx solid #221817;
+            text-align: center;
+        }
+
+        .disabled {
+            background: #FBFBFB;
+            color: #C9C9C9;
+            border: 2rpx solid #e6e6e6;
+        }
+
+        .active {
+            background: #221817;
+            color: #c6b499;
+            border: 2rpx solid #c6b499;
+        }
+    }
+}
+
+.van-cell-group {
+    margin-top: 30rpx;
+}
+
+.submit-button {
+    .van-button--primary {
+        background-color: #221817;
+        color: #c6b499;
+        border-color: #221817;
+        border-radius: 10rpx;
+        height: 88rpx;
+        line-height: 88rpx;
+        margin: 50rpx auto;
+        text-align: center;
+    }
+}
+
+
+</style>
+
+<template>
+    <view class="page">
+        <van-notify id="van-notify" />
+        <van-cell-group>
+            <van-field 
+            label="项目" 
+            clickable 
+            is-link
+            readonly
+            type="button"
+            value="{{ pickedItemName }}"
+            placeholder="请选择项目" 
+            @tap="showItemsPicker" />
+            <!-- <van-cell title="预约项目" is-link bind:click="showItemsPicker" /> -->
+            <van-popup
+            show="{{ itemsPicker }}"
+            position="bottom"
+            custom-style="height: 35%;"
+            bind:close="hideItemsPicker">
+            <van-picker 
+            show-toolbar 
+            title="请选择" 
+            columns="{{ itemsName }}" 
+            default-index="{{ itemIndex }}"
+            bind:cancel="hideItemsPicker"
+            bind:confirm="pickItem"
+            />
+            </van-popup>
+        </van-cell-group>
+
+        <view class="orderable-date-group">
+            <label>预约日期</label>
+            <scroll-view scroll-x >
+                <repeat for="{{ orderableDate }}" key="id" index="index" item="date">
+                    <view 
+                    class="orderable-date {{ dateIndex == index ? 'active' : '' }}" 
+                    data-index="{{ index }}" 
+                    data-text="{{ date.date }}" 
+                    @tap="pickDate">
+                        <view>{{ date.date }}</view>
+                        <view>{{ date.day }}</view>
+                    </view>
+                </repeat>
+            </scroll-view>
+        </view>
+
+        <view class="orderable-time-group">
+            <label>预约时间</label>
+            <repeat for="{{ orderableTime.order_time }}" key="id" index="index" item="orderTime">
+                <view class="orderable-time" 
+                data-index="{{index}}" 
+                data-passed="{{ orderTime.passed }}" 
+                data-text="{{ orderTime.time }}" 
+                @tap="pickTime">
+                    <view class="{{ timeIndex == index?'active':'' }}{{ orderTime.passed ?'disabled':''}}">
+                        <view class="order_times">{{ orderTime.time }}</view>
+                        <view class="order_counts">{{ orderTime.count }}/{{ orderableTime.max_number }}</view>
+                    </view>
+                </view>
+            </repeat>
+        </view>
+
+        <van-cell-group>
+            <van-field
+                label="备注"
+                type="textarea"
+                placeholder="请输入备注"
+                autosize
+                custom-style="height: 160rpx"
+                bind:input="inputRemark"
+            />
+        </van-cell-group>
+
+        <van-button type="primary" 
+        size="large"
+        class="submit-button" 
+        bind:click="nextStep">下一步</van-button>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+import Notify from '../../components/vant/notify/notify'
+
+export default class OrdersCreate extends wepy.page {
+    config = {
+        navigationBarTitleText: '新增预约',
+        navigationBarBackgroundColor: '#221817',
+        navigationBarTextStyle: 'white',
+
+        'usingComponents': {
+            'van-picker': '../../components/vant/picker/index',
+            'van-popup': '../../components/vant/popup/index'
+        }
+    }
+
+    data = {
+        shopId: null,
+        itemId: null,
+        orderDate: null,
+        orderTime: null,
+        itemsPicker: false,
+        orderableItems: null,
+        orderableDate: null,
+        orderableTime: null,
+        itemsName: [],
+        itemIndex: null,
+        dateIndex: null,
+        timeIndex: null,
+        pickedItemName: null,
+        pickedItemId: null,
+        remark: null
+    }
+
+    methods = {
+        showItemsPicker() {
+            this.itemsPicker = true
+        },
+        hideItemsPicker() {
+            this.itemsPicker = false
+        },
+        pickItem(e) {
+            this.pickedItemName = e.detail.value
+            this.itemId = this.orderableItems[e.detail.index].id
+            this.itemsPicker = false
+            this.getOrderableDate(this.itemId, this.shopId)
+            this.dateIndex = this.orderDate = this.timeIndex = this.orderTime = null
+        },
+        pickDate(e) {
+            this.getOrderableTime(this.itemId, this.shopId, e.currentTarget.dataset.text)
+            this.dateIndex = e.currentTarget.dataset.index
+            this.orderDate = e.currentTarget.dataset.text
+            this.timeIndex = null
+            // this.errors = {}
+        },
+        pickTime(e) {
+            if (e.currentTarget.dataset.passed) {
+                return false
+            }
+            this.timeIndex = e.currentTarget.dataset.index
+            this.orderTime = e.currentTarget.dataset.text
+        },
+        inputRemark(e) {
+            this.remark = e.detail
+        }
+    }
+
+    async getOrderableItems(shopId, itemId = null) {
+        try {
+            let orderableItemsResponse = await api.request({
+                url: 'orders/order_items?shop_id=' + shopId
+            })
+            let orderableItems = orderableItemsResponse.data.items
+            this.orderableItems = orderableItems
+            this.orderableItems.forEach((item,index) => {
+                this.itemsName = this.itemsName.concat(item.name)
+            })
+            if (itemId) {
+                this.itemId = itemId
+                this.pickedItemName = this.itemsName[itemId - 1]
+                this.itemIndex = this.itemId - 1
+            } else {
+                this.itemId = this.orderableItems[0].id
+            }
+            this.getOrderableDate(this.itemId, this.shopId)
+            this.getOrderableTime(this.itemId, this.shopId, this.orderDate)
+            this.$apply()
+        } catch (err) {
+            console.log(err)
+            wepy.showModal({
+                title: '提示',
+                content: '服务器错误，请联系管理员'
+            })
+        }
+    }
+
+    async getOrderableDate(itemId, shopId) {
+        try {
+            let orderableDateResponse = await api.request({
+                url: 'orders/order_date?item_id=' + itemId + '&shop_id=' + shopId,
+            })
+            let orderableDate = orderableDateResponse.data
+            this.orderableDate = orderableDate
+            this.$apply()
+        } catch (err) {
+            console.log(err)
+            wepy.showModal({
+                title: '提示',
+                content: '服务器错误，请联系管理员'
+            })
+        }
+    }
+
+    async getOrderableTime(itemId, shopId, orderDate) {
+        try {
+            let orderableTimeResponse = await api.request({
+                url: 'orders/order_time?item_id=' + itemId + '&shop_id=' + shopId + '&order_date=' + orderDate,
+            })
+            let orderableTime = orderableTimeResponse.data
+            this.orderableTime = orderableTime
+            this.$apply()
+        } catch (err) {
+            console.log(err)
+            wepy.showModal({
+                title: '提示',
+                content: '服务器错误，请联系管理员'
+            })
+        }
+    }
+
+    async nextStep() {
+        console.log(this.itemId)
+        if (this.itemId === null) {
+            Notify({ type: 'danger', message: '请选择预约项目', duration: 2000})
+            return false
+        }
+        if (this.orderDate === null) {
+            Notify({ type: 'danger', message: '请选择预约日期', duration: 2000})
+            return false
+        }
+        if (this.orderTime === null) {
+            Notify({ type: 'danger', message: '请选择预约时间', duration: 2000})
+            return false
+        }
+        
+        wx.navigateTo({
+            url: "/pages/orders/confirm?shop_id="+this.shopId+"&item_id="+this.itemId+
+            "&order_date="+this.orderDate+"&order_time="+this.orderTime+"&remark="+this.remark
+        })
+    }
+
+    async onLoad(options) {
+        this.shopId = options.shopId
+        if (options.itemId) {
+            await this.getOrderableItems(options.shopId, options.itemId)
+            // this.pickedItemName = this.item.name
+        } else {
+            this.getOrderableItems(options.shopId)
+            
+        }
+    }
+}
+</script>
+
+

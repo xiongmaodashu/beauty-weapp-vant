@@ -1,0 +1,155 @@
+<style lang="less">
+.search-items {
+    background: #ffffff;
+    margin-top: 24rpx;
+    padding: 100rpx 0;
+
+    .items-header {
+      margin-bottom: 50rpx;
+
+      .items-header-title {
+        text-align: center;
+        font-size: 36rpx;
+        font-weight: 700;
+        padding: 16rpx;
+        color: #221817;
+      }
+      .items-header-subtitle {
+        text-align: center;
+        font-weight: 200;
+        padding: 16rpx;
+        color: #221817;
+      }
+    }
+    .items-content {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+
+      .items-content-box {
+        flex: 0 0 49%;
+        overflow: hidden;
+        width: 350rpx;
+        height: 450rpx;
+        padding: 10rpx;
+        box-sizing: border-box;
+        margin-bottom: 12rpx;
+
+        image {
+          width: 100%;
+          height: 100%;
+          max-height: 350rpx;
+        }
+        .item-name {
+          margin-top: 16rpx;
+          text-align: center;
+          font-size: 28rpx;
+          font-weight: 300;
+        }
+      }
+    }
+    .items-content:after{
+      content:' ';
+      width:48%;
+      height:0;
+      display:block;
+    }
+    .no-data {
+        text-align: center;
+        color: #aaaaaa;
+        font-size: 28rpx;
+        font-weight: 300;
+    }
+}
+</style>
+
+<template>
+    <view class="page">
+        <view class="search-bar">
+            <van-search
+            value="{{ value }}"
+            placeholder="请输入搜索关键词"
+            use-action-slot
+            bind:change="inputKeyword"
+            bind:search="search"
+            >
+            <view slot="action" bind:tap="search">搜索</view>
+            </van-search>
+        </view>
+
+        <view class="search-items" wx:if="{{ isSearch }}">
+            <view class="items-header">
+                <view class="items-header-title">
+                搜索结果
+                </view>
+                <van-divider customStyle="width: 230rpx;margin: 0 auto;" />
+                <view class="items-header-subtitle">
+                Search Results
+                </view>
+            </view>
+            <view class="no-data" wx:if="{{ searchItems.length == 0 }}">
+                没有搜索到相关数据。
+            </view>
+            <view class="items-content" wx:else>
+                <repeat for="{{ searchItems }}" item="item">
+                    <navigator class="items-content-box" url="/pages/items/show?id={{ item.id }}">
+                        <image src="{{ item.thumbnail }}" />
+                        <view class="item-name">{{ item.name }}</view>
+                    </navigator>
+                </repeat>
+            </view>
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+
+export default class Search extends wepy.page {
+    config = {
+        navigationBarTitleText: '搜索',
+        navigationBarBackgroundColor: '#221817',
+        navigationBarTextStyle: 'white',
+
+        'usingComponents': {
+          'van-search': '../components/vant/search/index',
+          'van-divider': '../components/vant/divider/index',
+        }
+    }
+
+    data = {
+        keyword: null,
+        searchItems: [],
+        isSearch: false
+    }
+
+    methods = {
+        inputKeyword(e) {
+            this.keyword = e.detail
+        },
+        async search() {
+            this.isSearch = true
+            try {
+            let searchResponse = await api.request({
+                url: 'items/search',
+                data: {
+                  keyword: this.keyword
+                }
+            })
+            let searchItems = searchResponse.data.data;
+            this.searchItems = searchItems;
+            this.$apply();
+            } catch (err) {
+            console.log(err);
+            wepy.showModal({
+                title: '提示',
+                content: '服务器错误，请联系管理员'
+            });
+            }
+        }
+    }
+}
+</script>
+
+

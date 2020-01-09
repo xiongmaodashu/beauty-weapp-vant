@@ -1,0 +1,103 @@
+<style lang="less">
+page {
+    background: #ffffff;
+}
+.item {
+    padding: 40rpx;
+
+    .item-name {
+        font-size: 56rpx;
+        font-weight: 700;
+    }
+    .item-description {
+        margin-top: 40rpx;
+        font-size: 28rpx;
+        font-weight: 300;
+    }
+}
+.order-btn {
+    width: 100%;
+    height: 80rpx;
+    line-height: 80rpx;
+    background: #221817;
+    text-align: center;
+    color: #c8a063;
+    position: fixed;
+    bottom: 0;
+}
+</style>
+
+<template>
+    <view class="page">
+        <view class="item">
+            <view class="item-name">{{ item.name }}</view>
+            <view class="item-description">
+                <rich-text nodes="{{ item.description }}"></rich-text>
+            </view>
+        </view>
+        <navigator url="/pages/orders/create?itemId={{ item.id }}&shopId=1" 
+        class="order-btn">
+            立即预约
+        </navigator>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+
+export default class ItemsShow extends wepy.page {
+    config = {
+      navigationBarTitleText: '项目介绍',
+      navigationBarBackgroundColor: '#221817',
+      navigationBarTextStyle: 'white',
+      
+      usingComponents: {
+        'van-search': '../components/vant/search/index',
+        'van-divider': '../components/vant/divider/index',
+        'van-popup': '../components/vant/popup/index'
+      }
+    }
+
+    data = {
+        item: null
+    }
+
+    async getItem(id) {
+    try {
+      let itemResponse = await api.request({
+        url: 'items/' + id
+      })
+      let item = itemResponse.data
+      this.item = item
+      this.$apply()
+    } catch (err) {
+      console.log(err)
+      wepy.showModal({
+        title: '提示',
+        content: '服务器错误，请联系管理员'
+      })
+    }
+  }
+  onShareAppMessage(res) {
+    return {
+      title: this.item.name,
+      path: 'pages/items/show?id' + this.item.id,
+      success: function(res) {
+        console.log(res)
+      },
+      fail: function(res) {
+        console.log(res)
+      }
+    }
+  }
+  async onLoad(options) {
+    await this.getItem(options.id)
+    wx.setNavigationBarTitle({
+      title: this.item.name
+    })
+  }
+}
+</script>
+
+

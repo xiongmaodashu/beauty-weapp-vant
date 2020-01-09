@@ -1,0 +1,298 @@
+<style lang="less">
+.userinfo-header {
+  width: 100%;
+  height: 300rpx;
+  background: #221817;
+  position: relative;
+
+  .van-col--8 {
+    text-align: center;
+  }
+
+  .nickname {
+    position: absolute;
+    left: 200rpx;
+    bottom: 8rpx;
+    font-size: 36rpx;
+    color: #c6b499;
+  }
+}
+.user-info {
+  .van-cell {
+    height: 120rpx;
+    position: relative;
+  }
+}
+.avatar {
+  width: 150rpx;
+  height: 150rpx;
+  position: absolute;
+  left: 20rpx;
+  top: -75rpx;
+  border-radius: 20rpx;
+  z-index: 99;
+}
+.points {
+  position: absolute;
+  left: 200rpx;
+  top: 20rpx;
+  background: #c6b499;
+  color: #ffffff;
+  border-radius: 40rpx;
+  padding: 0 16rpx;
+}
+.points-rule {
+  width: 560rpx;
+  background :#221817;
+  color: #c6b499;
+  padding: 40rpx;
+  border: 1rpx solid #ffffff;
+
+  .rule-title {
+    text-align: center;
+    font-size: 42rpx;
+    font-weight: 700;
+    margin-bottom: 10rpx;
+  }
+  .rule-subtitle {
+    text-align: center;
+    font-size: 18rpx;
+    color: #cccccc;
+    margin-bottom: 70rpx;
+  }
+  .rule-clause {
+    margin-bottom: 16rpx;
+    font-size: 24rpx;
+    font-weight: 200;
+    
+    strong {
+      color: #ffffff;
+      font-size: 36rpx;
+      font-style: italic;
+      font-weight: 700;
+      display: inline-block;
+      padding: 0 10rpx;
+    }
+  }
+  .final-right {
+    font-size: 20rpx;
+    color: #cccccc;
+    margin-top: 80rpx;
+    text-align: center;
+    font-weight: 200;
+  }
+}
+
+.bind-phone {
+  .bind-phone-message {
+    color: #888888;
+  }
+}
+.points-menu, .user-menu {
+  margin-top: 22rpx;
+}
+.my-order {
+  margin-top: 22rpx;
+  .my-order-group {
+    .van-col {
+      text-align: center;
+
+      .van-icon {
+        font-size: 48rpx;
+        color: #888888;
+      }
+    }
+  }
+}
+</style>
+
+<template>
+  <view class="page">
+    <van-dialog id="van-dialog" bind:getuserinfo="getUserInfo" />
+    <view class="userinfo-header">
+      <view class="nickname">{{ user.nickname }}</view>
+    </view>
+    <view class="user-info">
+      <van-cell-group class="user-info">
+        <van-cell bind:click="showPointsRule">
+          <image class="avatar" src="{{ user.avatar }}" />
+          <view class="points">积分：{{ user.customer.points ? user.customer.points : '—' }}</view>
+          <van-icon slot="right-icon" name="question-o" />
+        </van-cell>
+      </van-cell-group>
+    </view>
+    <van-popup show="{{ pointsRule }}" bind:close="showPointsRule">
+      <view class="points-rule">
+        <view class="rule-title">
+          会员消费积分制度
+        </view>
+        <view class="rule-subtitle">
+          COMSUMPTION REWARDS SYSTEM
+        </view>
+        <view class="rule-clause">
+          1. 任意消费获得积分，<strong>1000</strong>元积<strong>100</strong>分
+        </view>
+        <view class="rule-clause">
+          2. 生日当月所有消费<strong>2</strong>倍积分
+        </view>
+        <view class="rule-clause">
+          3. 老客带新客，新客消费产生积分，老客获得一半
+        </view>
+        <view class="final-right">
+          倍美医疗美容诊所拥有积分规则的最终解释权
+        </view>
+      </view>
+    </van-popup>
+    
+    <view class="bind-phone" wx:if="{{ !user.phone }}">
+      <van-cell-group>
+        <van-cell is-link link-type="navigateTo" url="/pages/users/phone">
+          <view slot="title"><i class="iconfont">&#xe74c;</i>绑定手机</view>
+          <view slot="title" class="bind-phone-message">绑定以后可以进行预约、查询等相关操作</view>
+        </van-cell>
+      </van-cell-group>
+    </view>
+    <view class="my-order">
+      <van-cell-group>
+        <van-cell title="我的预约" is-link icon="todo-list-o" value="查看全部预约" url="/pages/orders/index?active=0" />
+        <van-cell>
+          <view slot="title">
+            <van-row class="my-order-group">
+              <van-col span="6">
+                <navigator url="/pages/orders/index?active=1">
+                <van-icon name="question-o" />
+                <view>待确认</view>
+                </navigator>
+              </van-col>
+              <van-col span="6">
+                <navigator url="/pages/orders/index?active=2">
+                <van-icon name="underway-o" />
+                <view>已确认</view>
+                </navigator>
+              </van-col>
+              <van-col span="6">
+                <navigator url="/pages/orders/index?active=3">
+                <van-icon name="passed" />
+                <view>已完成</view>
+                </navigator>
+              </van-col>
+              <van-col span="6">
+                <navigator url="/pages/orders/index?active=4">
+                <van-icon name="close" />
+                <view>已取消</view>
+                </navigator>
+              </van-col>
+            </van-row>
+          </view>
+        </van-cell>
+      </van-cell-group>
+    </view>
+
+    <view class="points-menu">
+      <van-cell-group>
+        <van-cell title="积分兑换" is-link icon="points" url="/pages/prizes/index" />
+        <van-cell title="我的奖品" is-link icon="point-gift-o" url="/pages/prizes/user" />
+      </van-cell-group>
+    </view>
+
+    <view class="user-menu">
+      <van-cell-group>
+        <van-cell title="个人信息" is-link icon="contact" url="/pages/users/edit" />
+      </van-cell-group>
+    </view>
+    
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+import Dialog from '../../components/vant/dialog/dialog'
+
+export default class UserMe extends wepy.page {
+  config = {
+    navigationBarTitleText: '我的',
+    navigationBarBackgroundColor: '#221817',
+    navigationBarTextStyle: 'white',
+
+    'usingComponents': {
+      'van-popup': '../../components/vant/popup/index'
+    }
+  }
+  
+  data = {
+    user: null,
+    pointsRule: false
+  }
+
+  methods = {
+    showPointsRule() {
+      this.pointsRule = !this.pointsRule
+    }
+  }
+
+
+
+async onShow() {
+   if (
+      typeof this.$wxpage.getTabBar === 'function' &&
+      this.$wxpage.getTabBar()
+    ) {
+      this.$wxpage.getTabBar().init()
+    }
+  
+    let accessToken = wepy.getStorageSync('access_token')
+
+    if (accessToken) {
+        this.user = await this.$parent.getCurrentUser(true)
+        this.$apply()
+    } else {
+    try {
+        let authResponse = await api.login()
+
+        // 登录成功返回上一页
+        if (authResponse.statusCode === 201) {
+        // wepy.navigateBack()
+        } else {
+          Dialog.confirm({
+            title: '微信登录',
+            message: '登录后才可以进行预约等相关操作',
+            confirmButtonOpenType: 'getUserInfo'
+          }).catch(() => {
+            wepy.switchTab({
+                url: '/pages/index'
+              })
+            })
+        }
+    } catch (err) {
+      console.log(err)
+        wepy.showModal({
+        title: '提示',
+        content: '服务器错误，请联系管理员'
+        })
+    }
+    }
+}
+async getUserInfo(event) {
+    let params = {
+        iv: event.detail.iv,
+        encryptedData: event.detail.encryptedData
+      }
+
+      let loginData = await wepy.login()
+      params.code = loginData.code
+      let authResponse = await api.request({
+        url: 'weapp/bind',
+        data: params,
+        method: 'POST'
+      })
+
+      if (authResponse.statusCode === 201) {
+        wepy.setStorageSync('access_token', authResponse.data.access_token)
+        wepy.setStorageSync('access_token_expired_at', new Date().getTime() + authResponse.data.expires_in * 1000)
+        this.onLoad()
+      }
+  }
+
+}
+</script>

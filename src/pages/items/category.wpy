@@ -1,0 +1,247 @@
+<style lang="less">
+.van-button.van-button--info.van-button--normal.van-button--block {
+    background: #221817;
+    color: #c6b499;
+    border-color: #221817;
+}
+
+.items-container {
+    background: #ffffff;
+    margin-top: 24rpx;
+    padding: 100rpx 0 160rpx 0;
+
+    .items-header {
+      margin-bottom: 50rpx;
+
+      .items-header-title {
+        text-align: center;
+        font-size: 36rpx;
+        font-weight: 700;
+        padding: 16rpx;
+        color: #221817;
+      }
+      .items-header-subtitle {
+        text-align: center;
+        font-weight: 200;
+        padding: 16rpx;
+        color: #221817;
+      }
+    }
+    .items-content {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+
+      .items-content-box {
+        flex: 0 0 49%;
+        overflow: hidden;
+        width: 350rpx;
+        height: 450rpx;
+        padding: 10rpx;
+        box-sizing: border-box;
+        margin-bottom: 12rpx;
+
+        image {
+          width: 100%;
+          height: 100%;
+          max-height: 350rpx;
+        }
+        .item-name {
+          margin-top: 16rpx;
+          text-align: center;
+          font-size: 28rpx;
+          font-weight: 300;
+        }
+      }
+    }
+
+    .items-content:after{
+      content:' ';
+      width:48%;
+      height:0;
+      display:block;
+    }
+}
+.no-data {
+    color: #aaaaaa;
+    font-size: 28rpx;
+    font-weight: 300;
+    text-align: center;
+}
+</style>
+
+<template>
+    <view class="page">
+        <van-dropdown-menu  active-color="#c6b499">
+            <van-dropdown-item value="{{ categoryIndex }}" 
+            options="{{ itemCategories }}" 
+            bind:change="pickedCategory"
+            />
+            <van-dropdown-item id="item" title="{{ itemTitle }}">
+                <van-cell title="{{ switchTitle1 }}">
+                <van-switch
+                    slot="right-icon"
+                    size="24px"
+                    style="height: 26px"
+                    checked="{{ switch1 }}"
+                    bind:change="onSwitch1Change"
+                />
+                </van-cell>
+                <van-cell title="{{ switchTitle2 }}">
+                <van-switch
+                    slot="right-icon"
+                    size="24px"
+                    style="height: 26px"
+                    checked="{{ switch2 }}"
+                    bind:change="onSwitch2Change"
+                />
+                </van-cell>
+                <van-button type="info" block bind:click="onFilter">
+                确定
+                </van-button>
+            </van-dropdown-item>
+        </van-dropdown-menu>
+
+        <view class="items-container" wx:if="{{ items.length != 0 }}">
+            <view class="items-header">
+                <view class="items-header-title">
+                {{ categoryName }}
+                </view>
+            </view>
+            <view class="items-content">
+                <repeat for="{{ items }}" item="item">
+                <navigator class="items-content-box" url="/pages/items/show?id={{ item.id }}">
+                    <image src="{{ item.thumbnail }}" />
+                    <view class="item-name">{{ item.name }}</view>
+                </navigator>
+                </repeat>
+            </view>
+        </view>
+        <view class="items-container no-data" wx:else>
+            没有相关内容。
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+
+export default class ItemsCategory extends wepy.page {
+    config = {
+      navigationBarTitleText: '项目分类',
+      navigationBarBackgroundColor: '#221817',
+      navigationBarTextStyle: 'white',
+      
+      'usingComponents': {
+        'van-dropdown-menu': '../../components/vant/dropdown-menu/index',
+        'van-dropdown-item': '../../components/vant/dropdown-item/index',
+        'van-switch': '../../components/vant/switch/index',
+      }
+    }
+
+    data = {
+        switchTitle1: '热门',
+        switchTitle2: '推荐',
+        switch1: false,
+        switch2: false,
+        itemTitle: '筛选',
+        categoryIndex: 0,
+        itemCategories: [
+            {'text': '全部', 'value': 0}
+        ],
+        categoryId: 0,
+        categoryName: '全部',
+        items: []
+    }
+
+    methods = {
+        onSwitch1Change() {
+            this.switch1 = !this.switch1
+        },
+        onSwitch2Change() {
+            this.switch2 = !this.switch2
+        },
+        pickedCategory(e) {
+            this.categoryId = e.detail
+            this.itemCategories.forEach((item, index) => {
+                if (item.value == this.categoryId) {
+                    this.categoryName = item.text
+                }
+            })
+            this.getItems()
+        },
+        onFilter() {
+            this.$wxpage.selectComponent('#item') .toggle()
+            this.getItems()
+        }
+    }
+
+    async getCategories() {
+        try {
+          let itemCategoriesResponse = await api.request({
+            url: 'items/item_categories'
+        })
+        this.itemCategories = this.itemCategories.concat(itemCategoriesResponse.data)
+        this.$apply()
+        // if (this.hotItems === '1') {
+        //     this.getMarkedItems('is_hot');
+        // } else if (this.recommandItems === '1') {
+        //     this.getMarkedItems('is_recommend');
+        // } else {
+        //     this.categoryId = itemCategoriesResponse.data.id[0];
+        //     this.$apply();
+        //     this.getItems();
+        // }
+        } catch (err) {
+        console.log(err)
+        wepy.showModal({
+            title: '提示',
+            content: '服务器错误，请联系管理员'
+        })
+        }
+    }
+
+    async getItems() {
+        if (this.categoryId) {
+            var url = 'items/category?item_category_id=' + this.categoryId
+        } else {
+            var url = 'items/category'
+        }
+        let params = {}
+        if (this.switch1) {
+            params.isHot = 1
+        }
+        if (this.switch2) {
+            params.isRecommend = 1
+        }
+        try {
+         let ItemsResponse = await api.request({
+            url: url,
+            data: params
+        })
+        let items = ItemsResponse.data.data;
+        this.items = items;
+        this.$apply();
+        } catch (err) {
+        console.log(err);
+        wepy.showModal({
+            title: '提示',
+            content: '服务器错误，请联系管理员'
+        });
+        }
+    }
+
+    onLoad() {
+        this.getCategories()
+        this.getItems()
+    }
+
+    onShow() {
+      if (typeof this.$wxpage.getTabBar === 'function' && this.$wxpage.getTabBar()) {
+        this.$wxpage.getTabBar().init()
+      }
+    }
+}
+</script>
+

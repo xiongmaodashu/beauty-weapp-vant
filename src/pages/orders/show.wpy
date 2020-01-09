@@ -1,0 +1,199 @@
+<style lang="less">
+.van-panel {
+    .van-cell {
+        .van-cell__value.panel-index--van-panel__header-value {
+            color:  #c6b499;
+        }
+    }
+    .van-cell__title {
+        flex: 2;
+    }
+    .van-cell__label {
+        flex: 1;
+    }
+    .content {
+        padding: 40rpx;
+        .operated-time {
+            font-size: 28rpx;
+            color: #aaaaaa;
+            margin-top: 16rpx; 
+            view {
+                margin-bottom: 10rpx;
+            }
+        }
+        .remark {
+            margin-top: 16rpx;
+            font-size: 28rpx;
+            line-height: 40rpx;
+        }
+    }
+    .footer {
+        overflow: hidden;
+        .contact-menu {
+            float: left;
+            .van-icon {
+                font-size: 56rpx;
+                margin-right: 10rpx;
+            }
+        }
+        .van-button {
+            float: right;
+        }
+    }
+}
+</style>
+
+<template>
+    <view class="page">
+        <van-notify id="van-notify" />
+        <van-dialog id="van-dialog" />
+        <van-panel 
+        title="{{ order.shop_item.item.name}}" 
+        desc="预约单号：{{ order.order_number }}"
+        status="{{ order.status_desc }}"
+        use-footer-slot
+        >
+        <view class="content">
+            <view>预约时间：{{ order.order_date_time }}</view>
+            <view class="operated-time">
+                <view>创建时间：{{ order.created_at }}</view>
+                <view>确认时间：{{ order.updated_at }}</view>
+            </view>
+            <view class="remark">备注：{{ order.remark == null ? '无' : order.remark }}</view>
+        </view>
+        <view slot="footer" class="footer">
+            <view class="contact-menu">
+                <van-icon name="phone-o" bind:click="callUs" />
+                <van-icon name="location-o" bind:click="navigation" />
+            </view>
+            <van-button size="small" 
+            type="danger" 
+            bind:click="cancel"
+            id="{{ order.id }}"
+            wx:if="{{ cancelableOrder }}"
+            >取消</van-button>
+        </view>
+        </van-panel>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+import Dialog from '../../components/vant/dialog/dialog'
+import Notify from '../../components/vant/notify/notify'
+
+export default class OrdersShow extends wepy.page {
+    config = {
+        navigationBarTitleText: '我的预约',
+        navigationBarBackgroundColor: '#221817',
+        navigationBarTextStyle: 'white',
+        'usingComponents': {
+            'van-panel': '../../components/vant/panel/index',
+        }
+    }
+    data = {
+        order: null,
+        cancelableOrder: false
+    }
+    methods = {
+         cancel(e) {
+             Dialog.confirm({
+                title: '取消预约',
+                message: '确定要取消本次预约吗？'
+                }).then(() => {
+                try {
+                    let orderResponse = api.authRequest({
+                        url: 'orders/' + e.currentTarget.id + '/cancel',
+                        method: 'PUT'
+                    })
+                    var orderResult = Promise.resolve(orderResponse)
+                    orderResult.then(function (result) { 
+                        if (result.statusCode == 201) {
+                          Notify({ type: 'success', message: '取消成功！', duration: 1000, onClose: () => {
+                              wepy.navigateBack()
+                          }});
+                        }
+                    })
+                    }catch(err) {
+                        console.log(err)
+                        wepy.showModal({
+                        title: '提示',
+                        content: '服务器错误，请联系管理员' 
+                        })
+                    }
+                }).catch(() => {
+                    Dialog.close()
+            })
+        },
+        callUs() {
+            wx.makePhoneCall({
+                phoneNumber: this.order.shop_item.shop.telephone
+            })
+        },
+        navigation() {
+          let _this = this;
+          wx.getLocation({
+            type: 'gcj02',
+            success: (res) => {
+            var latitude = res.latitude;
+            var longitude = res.longitude;
+            wx.openLocation({
+                latitude: latitude,
+                longitude: longitude,
+                name: '倍美医疗皮肤科',
+                address:
+                this.order.shop_item.shop.province +
+                this.order.shop_item.shop.city +
+                this.order.shop_item.shop.district +
+                this.order.shop_item.shop.address,
+                scale: 18
+              });
+            }
+          });
+        }
+
+    }
+    async getOrder(id) {
+        try {
+            let orderResponse = await api.authRequest({
+                url: 'orders/' + id,
+                data: {
+                    include: 'shop_item,shop_item.item,shop_item.shop'
+                }
+            })
+            this.order = orderResponse.data
+            this.isCancelable(orderResponse.data)
+            this.$apply()
+        } catch (err) {
+            console.log(err)
+            wepy.showModal({
+                title: '提示',
+                content: '服务器错误，请联系管理员'
+            })
+        }
+    }
+
+    isCancelable(order) {
+        if (order.status == 1) {
+            this.cancelableOrder = false
+            return
+        }
+        if (order.step != 1 && order.step != 2) {
+            this.cancelableOrder = false
+            return
+        } else {
+            if (new Date().getTime() > new Date(order.order_date_time).getTime()) {
+                this.cancelableOrder = false
+                return
+            }
+        }
+        this.cancelableOrder = true
+        
+    }
+    async onLoad(options) {
+        await this.getOrder(options.id)
+    }
+}
+</script>
+

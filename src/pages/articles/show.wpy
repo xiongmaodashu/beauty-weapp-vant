@@ -1,0 +1,117 @@
+<style lang="less">
+page {
+    background: #ffffff;
+
+    .article {
+        padding: 30rpx 40rpx 120rpx 40rpx;
+
+        .article-title {
+            text-align: center;
+            font-weight: 700;
+            line-height: 56rpx;
+            font-size: 36rpx;
+        }
+
+        .article-info {
+            display: flex;
+            margin-top: 30rpx;
+
+            view {
+                flex: 1;
+                font-size: 24rpx;
+                color: #aaaaaa;
+                text-align: center;
+            }
+            .article-icon {
+                font-size: 24rpx;
+                margin-right: 6rpx;
+            }
+        }
+
+        .article-body {
+            margin-top: 30rpx;
+            font-size: 28rpx;
+            font-weight: 300;
+        }
+    }
+}
+</style>
+
+<template>
+    <view class="page">
+        <view class="article">
+            <view class="article-title">{{ article.title }}</view>
+            <view class="article-info">
+                <view class="article-category"><i class="iconfont article-icon">&#xe60e;</i>
+                    {{ article.article_category.name }}</view>
+                <view class="article-date"><i class="iconfont article-icon">&#xe650;</i>
+                    {{ article.created_at }}</view>
+            </view>
+            <view class="article-body">
+                <rich-text nodes="{{ article.body }}"></rich-text>
+            </view>
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+
+export default class ArticlesShow extends wepy.page {
+    config = {
+    navigationBarTitleText: '资讯',
+    navigationBarBackgroundColor: '#221817',
+    navigationBarTextStyle: 'white',
+    }
+
+    data = {
+        article: null
+    }
+
+    async getArticle(id) {
+        try {
+        let articleResponse = await api.request({
+            url: 'articles/' + id,
+            data: {
+            include: 'article_category'
+            }
+        });
+        this.article = articleResponse.data;
+        let articleBody = this.article.body;
+        this.article.body = articleBody.replace(
+            /<img\s.*(src=".*") style=".*"/gi,
+            '<img $1 style="width:100%;height:auto"'
+        );
+        this.$apply();
+        } catch (err) {
+        wepy.showModal({
+            title: '提示',
+            content: '服务器错误，请联系管理员'
+        });
+        }
+    }
+
+    onShareAppMessage(res) {
+    return {
+      title: this.article.title,
+      path: '/pages/articles/show?id=' + this.article.id,
+      success: function(res) {
+        console.log(res);
+      },
+      fail: function(res) {
+        console.log(res)
+      }
+    }
+  }
+
+    async onLoad(options) {
+        await this.getArticle(options.id);
+        wx.setNavigationBarTitle({
+            title: this.article.title
+        });
+    }
+}
+</script>
+
+

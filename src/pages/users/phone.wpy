@@ -1,0 +1,183 @@
+<style lang="less">
+.bind-button {
+    .van-button {
+        background-color: #221817;
+        color: #c6b499;
+        border-color: #221817;
+        border-radius: 10rpx;
+        width: 90%;
+        height: 88rpx;
+        line-height: 88rpx;
+        margin: 50rpx auto;
+        display: block;
+    }
+}
+.cdtimer {
+    .van-button {
+        background: #dddddd;
+        color: #292929;
+        border-color: #dddddd;
+    }
+}
+</style>
+
+<template>
+    <view class="page">
+        <van-notify id="van-notify" />
+        <view>
+            <van-cell-group>
+            <van-field
+                center
+                clearable
+                label="手机号"
+                placeholder="请输入手机号码"
+                use-button-slot
+                error-message="{{ phoneErrorMessage }}"
+                bind:change="getPhoneNumber"
+            >
+            <van-button slot="button" 
+            size="small" 
+            type="primary" 
+            @tap="sendVerificationCode"
+            wx:if="{{ !cdTime }}"
+            >发送验证码</van-button>
+            <van-button 
+            slot="button" 
+            size="small" 
+            type="primary"
+            disabled
+            wx:else
+            class="cdtimer"
+            >{{ cdTime }}s后重新获取</van-button>
+         </van-field>
+         <van-field
+            label="验证码"
+            placeholder="请输入验证码"
+            clearable
+            focus="{{ isFocus }}"
+            bind:change="getVerificationCode"
+            error-message="{{ verificationCodeErrorMessage }}"
+        />
+        <van-button type="primary" class="bind-button" @tap="bind">提交绑定</van-button>
+        </van-cell-group>
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+import Notify from '../../components/vant/notify/notify'
+
+export default class UsersPhone extends wepy.page  {
+    config = {
+      navigationBarTitleText: '绑定手机',
+      navigationBarBackgroundColor: '#221817',
+      navigationBarTextStyle: 'white',
+    }
+
+    data = {
+    isFocus: false,
+    isSend: false,
+    cdTime: 0,
+    cdTimer: null,
+    phoneNumber: null,
+    verificationCode: null,
+    inputVerificationCode: null,
+    verificationCodeErrorMessage: null,
+    phoneErrorMessage: null
+  }
+
+  methods = {
+      getPhoneNumber(event) {
+          this.phoneNumber = event.detail
+      },
+      getVerificationCode(event) {
+          this.inputVerificationCode = event.detail
+      },
+      async sendVerificationCode() {
+        try {
+            let verificationCodeResponse = await api.authRequest({
+                url: 'verificationCodes',
+                method: 'POST',
+                data: {
+                    phone: this.phoneNumber
+                }
+            })
+            if (verificationCodeResponse.statusCode === 422) {
+                this.phoneErrorMessage = verificationCodeResponse.data.errors.phone[0]
+                this.$apply()
+            }
+            if (verificationCodeResponse.statusCode === 201) {
+                this.verificationCode = verificationCodeResponse.data
+                this.cdTime = 60
+                this.phoneErrorMessage = null
+                this.isFocus = true
+                let _this = this
+                if (_this.cdTimer) {
+                    clearInterval(_this.cdTimer)
+                }
+                _this.cdTimer = setInterval(function () {
+                    if(_this.cdTime > 0) {
+                        _this.cdTime--
+                        _this.$apply()
+                    }
+                },1000)
+            }
+        } catch (err) {
+            console.log(err)
+            wepy.showModal({
+            title: '提示',
+            content: '服务器错误，请联系管理员'
+            })
+        }
+      },
+      async bind() {
+          if (this.inputVerificationCode.length < 6) {
+              this.verificationCodeErrorMessage = '请输入有效的验证码'
+              this.$apply()
+              return false
+          }
+          if (new Date().getTime() > new Date(this.verificationCode.expiredAt).getTime()) {
+            this.verificationCodeErrorMessage = '验证码已失效，请重新获取'
+            this.$apply()
+            return false
+          }
+          try {
+            let bindPhoneResponse = await api.authRequest({
+                url: 'user/bind_phone',
+                method: 'PUT',
+                data: {
+                    verification_key: this.verificationCode.key,
+                    verification_code: this.inputVerificationCode
+                }
+            })
+            if (bindPhoneResponse.statusCode === 403 || bindPhoneResponse.statusCode === 401) {
+                this.verificationCodeErrorMessage = bindPhoneResponse.data.message
+                this.$apply()
+                return false
+            }
+            if (bindPhoneResponse.statusCode === 201) {
+                Notify({ type: 'success', message: '绑定成功' });
+                setTimeout(() => {
+                    let pages = getCurrentPages()
+                    let prevPage = pages[ pages.length - 2 ]
+                    prevPage.setData({
+                        phone:this.phoneNumber
+                    })
+                    wepy.navigateBack()
+                }, 1500)
+            }
+          } catch (err) {
+              console.log(err)
+              wepy.showModal({
+                title: '提示',
+                content: '服务器错误，请联系管理员'
+            })
+          }
+     }
+
+  }
+}
+</script>
+

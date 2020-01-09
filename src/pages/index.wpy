@@ -1,0 +1,541 @@
+<style lang="less">
+page {
+  // background: #f0efed;
+  background: #f1f1f1;
+  //c8a063
+  // background: #ffffff;
+  padding-bottom: 120rpx;
+}
+  .header {
+    padding: 60rpx 0;
+    background: #221817;
+
+    image {
+      margin:50rpx auto;
+      width: 500rpx;
+      height: 250rpx;
+      display: block;
+    }
+
+    // .van-search {
+    //   width: 60%;
+    //   margin: 0 auto;
+
+    //   .van-search__content {
+    //   background: #221817;
+
+    //   .van-search__field {
+    //     color: #c8a063;
+    //   }
+
+    //   .van-cell__left-icon-wrap,.van-cell__right-icon-wrap {
+    //     color: #c8a063;
+    //   }
+
+    //   .van-field__input {
+    //     color: #c8a063;
+    //     border-bottom: 1rpx solid #c8a063;
+    //   }
+    //  }
+
+    //  .search-action {
+    //     color: #c8a063;
+    //   }
+    // }
+
+    .search-bar {
+      padding: 15rpx;
+      .van-icon {
+        color: #c8a063;
+        margin: 0 auto;
+      }
+    }
+
+    .nav {
+      display: flex;
+      color: #c8a063;
+      font-size: 56rpx;
+      padding-top: 40rpx;
+      font-weight: 200;
+      flex-wrap: wrap;
+
+      .nav-item {
+        flex: 0 0 33%;
+        display: flex;
+        height: 64rpx;
+        align-items: center;
+        margin-bottom: 50rpx;
+        
+        .nav-icon {
+          flex: 0 0 40%;
+          font-size: 62rpx;
+          text-align: right;
+          padding-right: 10rpx;
+          line-height: 64rpx;
+          font-weight: 100;
+        }
+        .nav-text {
+          flex: 0 0 60%;
+          font-size: 24rpx;
+          line-height: 32rpx;
+          height: 64rpx;
+          text-align: left;
+
+          &>view:last-child {
+            font-size: 18rpx;
+            font-weight: 100;
+          }
+        }
+      }
+      .bd-r {
+        border-right: 1rpx solid #c8a063;
+      }
+    }
+  }
+
+  .qrcode-popup {
+    .qrcode {
+      width: 250rpx;
+      height: 250rpx;
+      margin: 0 auto;
+      display: block;
+    }
+    view {
+      text-align: center;
+      margin-top: 20rpx;
+      font-size: 28rpx;
+      font-weight: 200;
+    }
+  }
+
+  .swiper-container {
+    padding: 100rpx 0 40rpx 0;
+    background: #ffffff;
+    margin-bottom: 24rpx;
+
+    .items-header {
+      margin-bottom: 50rpx;
+
+      .items-header-title {
+        text-align: center;
+        font-size: 36rpx;
+        font-weight: 700;
+        padding: 16rpx;
+        color: #221817;
+      }
+      .items-header-subtitle {
+        text-align: center;
+        font-weight: 200;
+        padding: 16rpx;
+        color: #221817;
+      }
+    }
+
+    swiper {
+      width: 100%;
+      height: 400rpx;
+      overflow: hidden;
+      image {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  .items-container {
+    background: #ffffff;
+    margin-bottom: 24rpx;
+    padding-top: 140rpx;
+
+    .items-header {
+      margin-bottom: 50rpx;
+
+      .items-header-title {
+        text-align: center;
+        font-size: 36rpx;
+        font-weight: 700;
+        padding: 16rpx;
+        color: #221817;
+      }
+      .items-header-subtitle {
+        text-align: center;
+        font-weight: 200;
+        padding: 16rpx;
+        color: #221817;
+      }
+    }
+    .items-content {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+
+      .items-content-box {
+        flex: 0 0 49%;
+        overflow: hidden;
+        width: 350rpx;
+        height: 450rpx;
+        padding: 10rpx;
+        box-sizing: border-box;
+        margin-bottom: 12rpx;
+
+        image {
+          width: 100%;
+          height: 100%;
+          max-height: 350rpx;
+        }
+        .item-name {
+          margin-top: 16rpx;
+          text-align: center;
+          font-size: 28rpx;
+          font-weight: 300;
+        }
+      }
+    }
+    .items-content.hot-items {
+      height: 450rpx;
+      padding-bottom: 30rpx;
+      scroll-view {
+        width: 100%;
+        height: 450rpx;
+        white-space: nowrap;
+        overflow:hidden;
+        display: flex;
+        padding-left: 20rpx;
+
+        .items-content-box {
+          display: inline-block;
+          flex: 1;
+          flex-wrap: nowrap;
+          width: 450rpx;
+          position: relative;
+          padding: 0;
+          margin-right: 20rpx;
+
+          image {
+            display: inline-block;
+            width: 100%;
+            height: 100%;
+            max-height: 450rpx;
+            max-width: 450rpx;
+         }
+         .item-name {
+           width: 100%;
+           position: absolute;
+           left: 0;
+           bottom: 0;
+           padding: 10rpx 20rpx;
+           background: rgba(0,0,0, .4);
+           color: #ffffff;
+           text-align: left;
+           font-size: 24rpx;
+           font-weight: 300;
+         }
+        }
+      }
+    }
+    .items-content:after{
+      content:' ';
+      width:48%;
+      height:0;
+      display:block;
+    }
+  }
+</style>
+<template>
+  <view class="page">
+    <view class="header">
+      <image src="/images/logo3.jpg">
+
+      <!-- <van-search
+        value="{{ value }}"
+        use-action-slot
+        bind:search="onSearch"
+        bind:cancel="onCancel"
+        background="#221817">
+      <view slot="action" class="search-action" bind:tap="onClick">搜索</view>
+      </van-search> -->
+      
+
+
+      <view class="nav">
+        <navigator class="nav-item bd-r" 
+        url="/pages/articles/show?id={{weappSettings.BRAND_INTRODUCTION}}">
+          <view class="nav-icon">
+            <van-icon name="shop-o" />
+          </view>
+          <view class="nav-text">
+            <view>品牌介绍</view>
+            <view>Introduction</view>
+          </view>
+        </navigator>
+        <navigator class="nav-item bd-r" url="/pages/orders/create?shopId=1">
+          <view class="nav-icon">
+            <van-icon name="orders-o" />
+          </view>
+          <view class="nav-text">
+            <view>在线预约</view>
+            <view>Order</view>
+          </view>
+        </navigator>
+        <navigator class="nav-item" url="/pages/search">
+          <view class="nav-icon">
+            <van-icon name="search" />
+          </view>
+          <view class="nav-text">
+            <view>搜索项目</view>
+            <view>Search</view>
+          </view>
+        </navigator>
+
+        <view class="nav-item bd-r" @tap="contactUs">
+          <view class="nav-icon">
+            <van-icon name="phone-o" />
+          </view>
+          <view class="nav-text">
+            <view>联系我们</view>
+            <view>Contact</view>
+          </view>
+        </view>
+        <view class="nav-item bd-r" @tap="navigation">
+          <view class="nav-icon">
+            <van-icon name="location-o" />
+          </view>
+          <view class="nav-text">
+            <view>门店导航</view>
+            <view>Navigation</view>
+          </view>
+        </view>
+        <view class="nav-item" @tap="followUs">
+          <view class="nav-icon">
+            <van-icon name="qr" />
+          </view>
+          <view class="nav-text">
+            <view>关注我们</view>
+            <view>Follow</view>
+          </view>
+        </view>
+      </view>
+        </view>
+      <van-popup class="qrcode-popup" show="{{ qrcodeShow }}" 
+      position="bottom"
+      custom-style="height: 500rpx; padding: 40rpx 0;"
+      bind:close="followUs">
+      <image class="qrcode" src="/images/qrcode.jpg" />
+      <view>倍美医疗皮肤科</view>
+      </van-popup>
+
+    <view class="swiper-container">
+      <view class="items-header">
+        <view class="items-header-title">
+          最新活动
+        </view>
+        <van-divider customStyle="width: 230rpx;margin: 0 auto;" />
+        <view class="items-header-subtitle">
+          Sales
+        </view>
+      </view>
+      <swiper indicator-dots="{{indicatorDots}}"
+        autoplay="{{autoplay}}" interval="{{interval}}" duration="{{duration}}">
+        <repeat for="{{swiperImages}}" item="swiperImage">
+          <swiper-item>
+            <image src="/images/{{swiperImage}}" />
+          </swiper-item>
+        </repeat>
+      </swiper>
+    </view>
+
+    <view class="items-container">
+      <view class="items-header">
+        <view class="items-header-title">
+          热门项目
+        </view>
+        <van-divider customStyle="width: 230rpx;margin: 0 auto;" />
+        <view class="items-header-subtitle">
+          Hot
+        </view>
+      </view>
+      <view class="items-content hot-items">
+        <scroll-view scroll-x >
+          <repeat for="{{ hotItems }}" item="hotItem">
+            <navigator class="items-content-box"  url="/pages/items/show?id={{ hotItem.id }}">
+              <image src="{{ hotItem.thumbnail }}" />
+              <view class="item-name">{{ hotItem.name }}</view>
+            </navigator>
+          </repeat>
+        </scroll-view>
+      </view>
+    </view>
+
+    <view class="items-container">
+      <view class="items-header">
+        <view class="items-header-title">
+          全部项目
+        </view>
+        <van-divider customStyle="width: 230rpx;margin: 0 auto;" />
+        <view class="items-header-subtitle">
+          All
+        </view>
+      </view>
+      <view class="items-content">
+        <repeat for="{{ items }}" item="item">
+          <navigator class="items-content-box" url="/pages/items/show?id={{ item.id }}">
+            <image src="{{ item.thumbnail }}" />
+            <view class="item-name">{{ item.name }}</view>
+          </navigator>
+        </repeat>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  import api from '@/utils/api'
+
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: '倍美医疗皮肤科',
+      // navigationBarBackgroundColor: '#3d2c26',
+      navigationBarBackgroundColor: '#221817',
+      navigationBarTextStyle: 'white',
+      
+      usingComponents: {
+        'van-search': '../components/vant/search/index',
+        'van-divider': '../components/vant/divider/index',
+        'van-popup': '../components/vant/popup/index'
+      }
+    }
+
+    data = {
+      weappSettings: null,
+      shop: null,
+      qrcodeShow: false,
+      swiperImages: ['201.jpg', '202.jpg'],
+      indicatorDots: true,
+      vertical: false,
+      autoplay: false,
+      interval: 2000,
+      duration: 500,
+      hotItems: [],
+      items: []
+    }
+
+    methods = {
+      contactUs() {
+        wx.makePhoneCall({
+          phoneNumber: this.shop.telephone
+        })
+      },
+      navigation() {
+        wx.getLocation({
+          type: 'gcj02',
+          success: (res) => {
+            var latitude = res.latitude;
+            var longitude = res.longitude;
+            wx.openLocation({
+              latitude: latitude,
+              longitude: longitude,
+              name:this.weappSettings.COMPANY_NAME ? this.weappSettings.COMPANY_NAME : '倍美医疗皮肤科',
+              address:
+                this.shop.province +
+                this.shop.city +
+                this.shop.district +
+                this.shop.address,
+              scale: 18
+            });
+          }
+        })
+      },
+      followUs() {
+        this.qrcodeShow = !this.qrcodeShow
+      }
+    }
+
+    async getWeappSettings() {
+      try {
+        let settingsResponse = await api.request({
+          url: 'settings/weapp'
+        });
+        this.weappSettings = settingsResponse.data;
+        this.$apply();
+      } catch (err) {
+        wepy.showModal({
+          title: '提示',
+          content: '服务器错误，请联系管理员'
+        });
+      }
+    }
+
+    async getShop() {
+      try {
+        let shopResponse = await api.request({
+          url: 'shops/1'
+        });
+        this.shop = shopResponse.data;
+        this.$apply();
+      } catch (err) {
+        wepy.showModal({
+          title: '提示',
+          content: '服务器错误，请联系管理员'
+        });
+      }
+    }
+
+    async getHotItems() {
+      try {
+        let hotItemsResponse = await api.request({
+          url: 'items/category',
+          data: {
+            isHot: 1
+          }
+        });
+        let hotItems = hotItemsResponse.data.data;
+        this.hotItems = hotItems;
+        this.$apply();
+      } catch (err) {
+        console.log(err);
+        wepy.showModal({
+          title: '提示',
+          content: '服务器错误，请联系管理员'
+        });
+      }
+    }
+
+    async getItems(page = 1) {
+      try {
+        let itemsResponse = await api.request({
+          url: 'items',
+          data: {
+            page: page,
+            include: 'item_category'
+          }
+        });
+        let items = itemsResponse.data.data;
+        this.items = this.items.concat(items);
+        this.$apply();
+      } catch (err) {
+        wepy.showModal({
+          title: '提示',
+          content: '服务器错误，请联系管理员'
+        });
+      }
+    }
+
+    async onLoad() {
+      this.getHotItems();
+      this.getItems();
+      this.getShop();
+      await this.getWeappSettings();
+      // this.setSwiper();
+      wx.setNavigationBarTitle({
+        title: this.weappSettings.WEAPP_NAME ? this.weappSettings.WEAPP_NAME : '倍美医疗皮肤科'
+      })
+    }
+
+    onShow() {
+      if (typeof this.$wxpage.getTabBar === 'function' && this.$wxpage.getTabBar()) {
+        this.$wxpage.getTabBar().init()
+      }
+    }
+  }
+</script>

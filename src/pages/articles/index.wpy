@@ -1,0 +1,184 @@
+<style lang="less">
+page {
+    background: #ffffff;
+}
+.page {
+    padding-bottom: 140rpx;
+    .van-divider {
+        width: 60%;
+        margin: 0 auto;
+    }
+}
+.page-title {
+    padding: 40rpx 0 16rpx 0;
+    text-align: center;
+    font-size: 36rpx;
+    font-weight: 700;
+}
+.page-subtitle {
+    padding: 12rpx 0 30rpx 0;
+    font-size: 28rpx;
+    color: #292929;
+    text-align: center;
+    font-weight: 100;
+}
+    .article {
+        width: 90%;
+        margin: 20rpx auto;
+        padding: 30rpx 20rpx;
+        border: 2rpx solid #898989;
+
+        .article-title {
+            font-size: 32rpx;
+            font-weight: 700;
+
+            .article-top {
+                display: inline-block;
+                height: 56rpx;
+                line-height: 54rpx;
+                padding: 0 16rpx;
+                background: #221817;
+                color: #c6b499;
+                font-size: 28rpx;
+                margin-right: 20rpx;
+                font-weight: 400;
+            }
+        }
+
+        .article-info {
+            display: flex;
+            margin-top: 30rpx;
+
+            view {
+                flex: 1;
+                font-size: 22rpx;
+                color: #aaaaaa;
+                text-align: left;
+            }
+            .article-icon {
+                font-size: 22rpx;
+                margin-right: 6rpx;
+            }
+        }
+        .article-abstrac {
+            margin-top: 30rpx;
+            font-size: 24rpx;
+            line-height: 40rpx;
+            font-weight: 100;
+        }
+    }
+</style>
+
+<template>
+    <view class="page">
+        <view class="page-title">新闻资讯</view>
+        <van-divider customStyle="width: 230rpx;margin: 0 auto;" />
+        <view class="page-subtitle">News</view>
+        <repeat for="{{ articles }}" item="article">
+       <navigator class="article" url="/pages/articles/show?id={{ article.id }}">
+           <view class="article-title">
+               <view class="article-top" wx:if="{{article.is_top}}">置顶</view>{{ article.title }}</view>
+           <view class="article-info">
+                <view class="article-category">
+                    <i class="iconfont article-icon">&#xe60e;</i>
+                    {{ article.article_category.name }}</view>
+                <view class="article-date">
+                    <i class="iconfont article-icon">&#xe650;</i>
+                    {{ article.created_at }}</view>
+            </view>
+            <view class="article-abstrac">不久前宋祖儿出席活动，一头乌黑的“斩男”黑长直搭配亮色系的眼线，妆容出挑又有些俏皮的小性感。</view>
+       </navigator>
+       </repeat>
+       <van-divider 
+        contentPosition="center" 
+        wx:if="{{ noMoreData }}">
+        没有更多记录</van-divider>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy'
+import api from '@/utils/api'
+
+export default class ArticlesIndex extends wepy.page {
+    config = {
+    navigationBarTitleText: '资讯',
+    navigationBarBackgroundColor: '#221817',
+    navigationBarTextStyle: 'white',
+
+    enablePullDownRefresh: true,
+    
+    'usingComponents': {
+        'van-divider': '../../components/vant/divider/index'
+    }
+  }
+  
+  data = {
+    articles: [],
+    noMoreData: false,
+    page: 1,
+    inputShowed: false,
+    inputVal: '',
+    isSearch: false,
+    searchArticles: []
+  }
+
+async getArticles(page = 1, reset = false) {
+    let params = {};
+    params.page = page;
+    params.include = 'article_category';
+    try {
+      let articlesResponse = await api.request({
+        url: 'articles',
+        data: params
+      });
+      let articles = articlesResponse.data.data;
+      this.articles = reset ? articles : this.articles.concat(articles);
+      let pagination = articlesResponse.data.meta.pagination;
+      if (pagination.current_page === pagination.total_pages) {
+        this.noMoreData = true;
+      }
+      this.$apply();
+    } catch (err) {
+        console.log(err)
+      wepy.showModal({
+        title: '提示',
+        content: '服务器错误，请联系管理员'
+      });
+    }
+  }
+
+  async onPullDownRefresh() {
+    this.noMoreData = false;
+    this.page = 1;
+    await this.getArticles(1, true);
+    wepy.stopPullDownRefresh();
+  }
+
+  async onReachBottom() {
+    if (this.noMoreData) {
+      return;
+    }
+    this.page = this.page + 1;
+    await this.getArticles(this.page);
+    this.$apply();
+  }
+
+
+async onShow() {
+   if (
+      typeof this.$wxpage.getTabBar === 'function' &&
+      this.$wxpage.getTabBar()
+    ) {
+      this.$wxpage.getTabBar().init()
+    }
+  }
+
+  onLoad() {
+    this.getArticles(1);
+  }
+
+}
+
+</script>
+
