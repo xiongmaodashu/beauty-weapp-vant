@@ -1,12 +1,12 @@
 <style lang="less">
 @font-face {
   font-family: 'iconfont';  /* project id 1574498 */
-  src: url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.eot');
-  src: url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.eot?#iefix') format('embedded-opentype'),
-  url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.woff2') format('woff2'),
-  url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.woff') format('woff'),
-  url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.ttf') format('truetype'),
-  url('//at.alicdn.com/t/font_1574498_3sp3k5ibtej.svg#iconfont') format('svg');
+  src: url('//at.alicdn.com/t/font_1574498_ckxfs77j1cw.eot');
+  src: url('//at.alicdn.com/t/font_1574498_ckxfs77j1cw.eot?#iefix') format('embedded-opentype'),
+  url('//at.alicdn.com/t/font_1574498_ckxfs77j1cw.woff2') format('woff2'),
+  url('//at.alicdn.com/t/font_1574498_ckxfs77j1cw.woff') format('woff'),
+  url('//at.alicdn.com/t/font_1574498_ckxfs77j1cw.ttf') format('truetype'),
+  url('//at.alicdn.com/t/font_1574498_ckxfs77j1cw.svg#iconfont') format('svg');
 }
 .iconfont{
     font-family:"iconfont" !important;
@@ -17,9 +17,11 @@
 }
 
 page {
+  width: 100%;
   background: #efefef;
 }
 .van-tabbar {
+  padding-top: 6rpx;
   .van-tabbar-item.van-tabbar-item--active{
     color: #c6b499;
   }
@@ -94,7 +96,8 @@ export default class BaseApp extends wepy.app {
       'van-row': './components/vant/row/index',
       'van-col': './components/vant/col/index',
       'van-notify': './components/vant/notify/index',
-      'van-divider': '../../components/vant/divider/index'
+      'van-divider': '../../components/vant/divider/index',
+      'van-skeleton': '../../components/vant/skeleton/index'
     }
   }
 

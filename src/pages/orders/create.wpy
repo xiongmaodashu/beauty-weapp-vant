@@ -2,6 +2,9 @@
 page {
     background: #f1f1f1;
 }
+.van-popup {
+    z-index: 999;
+}
 .orderable-date-group {
     padding: 20rpx 8rpx;
     background: #ffffff;
@@ -113,7 +116,7 @@ page {
             <van-popup
             show="{{ itemsPicker }}"
             position="bottom"
-            custom-style="height: 35%;"
+            custom-style="height: 50%;"
             bind:close="hideItemsPicker">
             <van-picker 
             show-toolbar 
@@ -166,6 +169,8 @@ page {
                 autosize
                 custom-style="height: 160rpx"
                 bind:input="inputRemark"
+                customer-style="z-index: -1"
+                v-if="remarkShow"
             />
         </van-cell-group>
 
@@ -208,22 +213,27 @@ export default class OrdersCreate extends wepy.page {
         timeIndex: null,
         pickedItemName: null,
         pickedItemId: null,
-        remark: null
+        remark: '',
+        remarkShow: true,
     }
 
     methods = {
         showItemsPicker() {
             this.itemsPicker = true
+            this.remarkShow = false
         },
         hideItemsPicker() {
             this.itemsPicker = false
+            this.remarkShow = true
         },
         pickItem(e) {
             this.pickedItemName = e.detail.value
             this.itemId = this.orderableItems[e.detail.index].id
             this.itemsPicker = false
             this.getOrderableDate(this.itemId, this.shopId)
+            this.getOrderableTime(this.itemId, this.shopId)
             this.dateIndex = this.orderDate = this.timeIndex = this.orderTime = null
+            this.remarkShow = true
         },
         pickDate(e) {
             this.getOrderableTime(this.itemId, this.shopId, e.currentTarget.dataset.text)

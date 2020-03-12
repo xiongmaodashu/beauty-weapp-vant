@@ -1,12 +1,11 @@
 <style lang="less">
 page {
-  // background: #f0efed;
   background: #f1f1f1;
-  //c8a063
-  // background: #ffffff;
   padding-bottom: 120rpx;
 }
   .header {
+    width: 100%;
+    overflow: hidden;
     padding: 60rpx 0;
     background: #221817;
 
@@ -16,32 +15,6 @@ page {
       height: 250rpx;
       display: block;
     }
-
-    // .van-search {
-    //   width: 60%;
-    //   margin: 0 auto;
-
-    //   .van-search__content {
-    //   background: #221817;
-
-    //   .van-search__field {
-    //     color: #c8a063;
-    //   }
-
-    //   .van-cell__left-icon-wrap,.van-cell__right-icon-wrap {
-    //     color: #c8a063;
-    //   }
-
-    //   .van-field__input {
-    //     color: #c8a063;
-    //     border-bottom: 1rpx solid #c8a063;
-    //   }
-    //  }
-
-    //  .search-action {
-    //     color: #c8a063;
-    //   }
-    // }
 
     .search-bar {
       padding: 15rpx;
@@ -246,17 +219,6 @@ page {
     <view class="header">
       <image src="/images/logo3.jpg">
 
-      <!-- <van-search
-        value="{{ value }}"
-        use-action-slot
-        bind:search="onSearch"
-        bind:cancel="onCancel"
-        background="#221817">
-      <view slot="action" class="search-action" bind:tap="onClick">搜索</view>
-      </van-search> -->
-      
-
-
       <view class="nav">
         <navigator class="nav-item bd-r" 
         url="/pages/articles/show?id={{weappSettings.BRAND_INTRODUCTION}}">
@@ -315,7 +277,7 @@ page {
           </view>
         </view>
       </view>
-        </view>
+    </view>
       <van-popup class="qrcode-popup" show="{{ qrcodeShow }}" 
       position="bottom"
       custom-style="height: 500rpx; padding: 40rpx 0;"
@@ -338,7 +300,7 @@ page {
         autoplay="{{autoplay}}" interval="{{interval}}" duration="{{duration}}">
         <repeat for="{{swiperImages}}" item="swiperImage">
           <swiper-item>
-            <image src="/images/{{swiperImage}}" />
+            <image src="{{swiperImage}}" />
           </swiper-item>
         </repeat>
       </swiper>
@@ -395,7 +357,6 @@ page {
   export default class Index extends wepy.page {
     config = {
       navigationBarTitleText: '倍美医疗皮肤科',
-      // navigationBarBackgroundColor: '#3d2c26',
       navigationBarBackgroundColor: '#221817',
       navigationBarTextStyle: 'white',
       
@@ -410,14 +371,16 @@ page {
       weappSettings: null,
       shop: null,
       qrcodeShow: false,
-      swiperImages: ['201.jpg', '202.jpg'],
+      swiperImages: [],
       indicatorDots: true,
       vertical: false,
       autoplay: false,
       interval: 2000,
       duration: 500,
       hotItems: [],
-      items: []
+      items: [],
+      page: 1,
+      noMoreData: false
     }
 
     methods = {
@@ -457,6 +420,7 @@ page {
           url: 'settings/weapp'
         });
         this.weappSettings = settingsResponse.data;
+        this.swiperImages = this.weappSettings['SWIPER_IMAGES'].split(',')
         this.$apply();
       } catch (err) {
         wepy.showModal({
@@ -512,6 +476,10 @@ page {
         });
         let items = itemsResponse.data.data;
         this.items = this.items.concat(items);
+        let pagination = itemsResponse.data.meta.pagination;
+        if (pagination.current_page === pagination.total_pages) {
+          this.noMoreData = true;
+        }
         this.$apply();
       } catch (err) {
         wepy.showModal({
@@ -519,6 +487,15 @@ page {
           content: '服务器错误，请联系管理员'
         });
       }
+    }
+
+    async onReachBottom() {
+      if (this.noMoreData) {
+        return;
+      }
+      this.page = this.page + 1;
+      await this.getItems(this.page);
+      this.$apply();
     }
 
     async onLoad() {

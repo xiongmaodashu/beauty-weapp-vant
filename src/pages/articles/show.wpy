@@ -32,6 +32,11 @@ page {
             margin-top: 30rpx;
             font-size: 28rpx;
             font-weight: 300;
+
+            rich-text .rich-img {
+                width: 100%;
+                height: auto;
+            }
         }
     }
 }
@@ -79,10 +84,11 @@ export default class ArticlesShow extends wepy.page {
         });
         this.article = articleResponse.data;
         let articleBody = this.article.body;
-        this.article.body = articleBody.replace(
-            /<img\s.*(src=".*") style=".*"/gi,
-            '<img $1 style="width:100%;height:auto"'
-        );
+        // this.article.body = articleBody.replace(
+        //     /<img\s.*(src=".*") style=".*" \/>/gi,
+        //     <img $1 style="width:100%;height:auto:max-width:600rpx" />
+        // )
+        this.article.body = articleBody.replace(/\<img/gi,   '<img class="rich-img" ')
         this.$apply();
         } catch (err) {
         wepy.showModal({
@@ -107,6 +113,7 @@ export default class ArticlesShow extends wepy.page {
 
     async onLoad(options) {
         await this.getArticle(options.id);
+        console.log(this.loading)
         wx.setNavigationBarTitle({
             title: this.article.title
         });

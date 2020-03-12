@@ -57,7 +57,7 @@
             <view>预约时间：{{ order.order_date_time }}</view>
             <view class="operated-time">
                 <view>创建时间：{{ order.created_at }}</view>
-                <view>确认时间：{{ order.updated_at }}</view>
+                <view><text wx:if="{{order.status == 1}}">取消</text><text wx:else>确认</text>时间：{{ order.updated_at }}</view>
             </view>
             <view class="remark">备注：{{ order.remark == null ? '无' : order.remark }}</view>
         </view>

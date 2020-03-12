@@ -3,16 +3,33 @@ page {
     background: #ffffff;
 }
 .item {
-    padding: 40rpx;
+    padding: 40rpx 30rpx 120rpx 30rpx;
 
     .item-name {
-        font-size: 56rpx;
+        font-size: 44rpx;
         font-weight: 700;
     }
     .item-description {
         margin-top: 40rpx;
         font-size: 28rpx;
         font-weight: 300;
+    }
+
+    .item-info {
+      color: #bbbbbb;
+      font-size: 26rpx;
+      margin-top: 20rpx;
+      .item-category {
+        width: 50%;
+        display: inline-block;
+      }
+      .item-hot {
+        width: 50%;
+        display: inline-block;
+      }
+      .iconfont {
+        font-size: 26rpx;
+      }
     }
 }
 .order-btn {
@@ -31,6 +48,12 @@ page {
     <view class="page">
         <view class="item">
             <view class="item-name">{{ item.name }}</view>
+            <view class="item-info">
+              <view class="item-category">
+                <i class="iconfont">&#xe60e;</i> {{ item.item_category.name }}</view>
+              <view class="item-hot">
+                <i class="iconfont">&#xe607;</i> {{ item.heat }}</view>
+            </view>
             <view class="item-description">
                 <rich-text nodes="{{ item.description }}"></rich-text>
             </view>
@@ -66,7 +89,10 @@ export default class ItemsShow extends wepy.page {
     async getItem(id) {
     try {
       let itemResponse = await api.request({
-        url: 'items/' + id
+        url: 'items/' + id,
+        data: {
+          include: 'item_category'
+        }
       })
       let item = itemResponse.data
       this.item = item

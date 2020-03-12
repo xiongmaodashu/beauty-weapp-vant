@@ -152,7 +152,9 @@ export default class ItemsCategory extends wepy.page {
         ],
         categoryId: 0,
         categoryName: '全部',
-        items: []
+        items: [],
+        page: 1,
+        noMoreData: false
     }
 
     methods = {
@@ -169,11 +171,13 @@ export default class ItemsCategory extends wepy.page {
                     this.categoryName = item.text
                 }
             })
-            this.getItems()
+            this.items = []
+            this.getItems(1)
         },
         onFilter() {
             this.$wxpage.selectComponent('#item') .toggle()
-            this.getItems()
+            this.items = []
+            this.getItems(1)
         }
     }
 
@@ -202,7 +206,7 @@ export default class ItemsCategory extends wepy.page {
         }
     }
 
-    async getItems() {
+    async getItems(page = 1) {
         if (this.categoryId) {
             var url = 'items/category?item_category_id=' + this.categoryId
         } else {
@@ -215,13 +219,18 @@ export default class ItemsCategory extends wepy.page {
         if (this.switch2) {
             params.isRecommend = 1
         }
+        params.page = page
         try {
-         let ItemsResponse = await api.request({
+         let itemsResponse = await api.request({
             url: url,
             data: params
         })
-        let items = ItemsResponse.data.data;
-        this.items = items;
+        let items = itemsResponse.data.data;
+        this.items = this.items.concat(items);
+        let pagination = itemsResponse.data.meta.pagination;
+        if (pagination.current_page === pagination.total_pages) {
+          this.noMoreData = true;
+        }
         this.$apply();
         } catch (err) {
         console.log(err);
@@ -230,6 +239,15 @@ export default class ItemsCategory extends wepy.page {
             content: '服务器错误，请联系管理员'
         });
         }
+    }
+
+    async onReachBottom() {
+        if (this.noMoreData) {
+            return;
+        }
+        this.page = this.page + 1;
+        await this.getItems(this.page);
+        this.$apply();
     }
 
     onLoad() {

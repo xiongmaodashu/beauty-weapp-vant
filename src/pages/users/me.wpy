@@ -191,7 +191,7 @@
     <view class="points-menu">
       <van-cell-group>
         <van-cell title="积分兑换" is-link icon="points" url="/pages/prizes/index" />
-        <van-cell title="我的奖品" is-link icon="point-gift-o" url="/pages/prizes/user" />
+        <van-cell title="我的兑换" is-link icon="point-gift-o" url="/pages/prizes/user" />
       </van-cell-group>
     </view>
 
