@@ -2,6 +2,9 @@
 page {
     background: #f1f1f1;
 }
+.page {
+    padding-bottom: 90rpx;
+}
 .van-popup {
     z-index: 999;
 }
@@ -83,6 +86,7 @@ page {
     margin-top: 30rpx;
 }
 
+
 .submit-button {
     .van-button--primary {
         background-color: #221817;
@@ -91,7 +95,9 @@ page {
         border-radius: 10rpx;
         height: 88rpx;
         line-height: 88rpx;
-        margin: 50rpx auto;
+        margin: 50rpx auto 0 auto;
+        position: fixed;
+        bottom: 0;
         text-align: center;
     }
 }
@@ -161,6 +167,7 @@ page {
             </repeat>
         </view>
 
+        <view hidden="{{ remarkHidden }}" style="height: 190rpx;">
         <van-cell-group>
             <van-field
                 label="备注"
@@ -170,9 +177,9 @@ page {
                 custom-style="height: 160rpx"
                 bind:input="inputRemark"
                 customer-style="z-index: -1"
-                v-if="remarkShow"
             />
         </van-cell-group>
+        </view>
 
         <van-button type="primary" 
         size="large"
@@ -214,17 +221,17 @@ export default class OrdersCreate extends wepy.page {
         pickedItemName: null,
         pickedItemId: null,
         remark: '',
-        remarkShow: true,
+        remarkHidden: false,
     }
 
     methods = {
         showItemsPicker() {
             this.itemsPicker = true
-            this.remarkShow = false
+            this.remarkHidden = true
         },
         hideItemsPicker() {
             this.itemsPicker = false
-            this.remarkShow = true
+            this.remarkHidden = false
         },
         pickItem(e) {
             this.pickedItemName = e.detail.value
@@ -233,7 +240,7 @@ export default class OrdersCreate extends wepy.page {
             this.getOrderableDate(this.itemId, this.shopId)
             this.getOrderableTime(this.itemId, this.shopId)
             this.dateIndex = this.orderDate = this.timeIndex = this.orderTime = null
-            this.remarkShow = true
+            this.remarkHidden = false
         },
         pickDate(e) {
             this.getOrderableTime(this.itemId, this.shopId, e.currentTarget.dataset.text)
