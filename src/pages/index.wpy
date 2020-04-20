@@ -283,7 +283,7 @@ page {
       custom-style="height: 500rpx; padding: 40rpx 0;"
       bind:close="followUs">
       <image class="qrcode" src="/images/qrcode.jpg" />
-      <view>倍美医疗皮肤科</view>
+      <view>倍美医疗美容皮肤科</view>
       </van-popup>
 
     <view class="swiper-container">
@@ -356,10 +356,11 @@ page {
 
   export default class Index extends wepy.page {
     config = {
-      navigationBarTitleText: '倍美医疗皮肤科',
+      navigationBarTitleText: '倍美医疗美容皮肤科',
       navigationBarBackgroundColor: '#221817',
       navigationBarTextStyle: 'white',
-      
+      enablePullDownRefresh: true,
+
       usingComponents: {
         'van-search': '../components/vant/search/index',
         'van-divider': '../components/vant/divider/index',
@@ -498,12 +499,36 @@ page {
       this.$apply();
     }
 
+    async onPullDownRefresh() {
+      this.noMoreData = false;
+      this.page = 1;
+      this.hotItems = [];
+      this.items = [];
+      this.getHotItems();
+      this.getItems();
+      this.getShop();
+      await this.getWeappSettings();
+      wepy.stopPullDownRefresh();
+    }
+
+    onShareAppMessage(res) {
+      return {
+        title: '倍美医疗美容皮肤科',
+        path: 'pages/index',
+        success: function(res) {
+          console.log(res)
+        },
+        fail: function(res) {
+          console.log(res)
+        }
+      }
+    }
+
     async onLoad() {
       this.getHotItems();
       this.getItems();
       this.getShop();
       await this.getWeappSettings();
-      // this.setSwiper();
       wx.setNavigationBarTitle({
         title: this.weappSettings.WEAPP_NAME ? this.weappSettings.WEAPP_NAME : '倍美医疗皮肤科'
       })

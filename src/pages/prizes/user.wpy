@@ -139,7 +139,7 @@
                         status="{{ prize.status_text }}">
                         <view class="content">
                             <view class="reddem-number">兑换码：{{ prize.redeem_number }}</view>
-                            <view class="expired-time">有效期：{{ prize.expired_time }}</view>
+                            <view class="expired-time">使用时间：{{ prize.updated_at }}</view>
                         </view>
                         </van-panel>
                         </navigator>

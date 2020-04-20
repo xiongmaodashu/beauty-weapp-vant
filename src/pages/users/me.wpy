@@ -1,4 +1,7 @@
 <style lang="less">
+.page {
+  padding-bottom: 60rpx;
+}
 .userinfo-header {
   width: 100%;
   height: 300rpx;

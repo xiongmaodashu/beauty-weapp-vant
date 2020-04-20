@@ -73,7 +73,7 @@ import Notify from '../../components/vant/notify/notify'
 
 export default class PrizesShow extends wepy.page {
     config = {
-      navigationBarTitleText: '奖品列表',
+      navigationBarTitleText: '积分项目',
       navigationBarBackgroundColor: '#221817',
       navigationBarTextStyle: 'white',
     }
@@ -131,12 +131,15 @@ export default class PrizesShow extends wepy.page {
         })
         this.prize = prizeResponse.data
         let prizeDescription = this.prize.description;
-        this.prize.description = prizeDescription.replace(
+        if (this.prize.description !== null) {
+            this.prize.description = prizeDescription.replace(
             /<img\s.*(src=".*") style=".*"/gi,
             '<img $1 style="width:100%;height:auto"'
-        );
+            );
+        }
         this.$apply();
         } catch (err) {
+            console.log(err)
         wepy.showModal({
             title: '提示',
             content: '服务器错误，请联系管理员'

@@ -42,10 +42,8 @@ page {
         flex: 1;
 
         image {
-            width: 100%;
-            height: 100%;
-            max-width: 240prx;
-            max-height: 240rpx;;
+           width: 240rpx;
+           height: 240rpx;;
         }
     }
     .prize-info {
@@ -99,14 +97,14 @@ page {
 
 <template>
     <view class="page">
-        <view wx:if="{{ !user.customer }}" class="unbind">
+        <view wx:if="{{ user && !user.customer }}" class="unbind">
             <view>您还未绑定手机或绑定的手机号码与开卡预留手机号码不匹配。</view>
             <navigator url="/pages/users/phone">立即绑定</navigator>
         </view>
         <view wx:else>
             <van-notify id="van-notify" />
         <view class="page-header">
-            <view class="page-title">奖品列表</view>
+            <view class="page-title">积分项目</view>
             <van-divider customStyle="width: 230rpx;margin: 0 auto;" />
             <view class="page-subtitle">Prizes</view>
         </view>
@@ -154,9 +152,10 @@ import Notify from '../../components/vant/notify/notify'
 
 export default class PrizesIndex extends wepy.page {
     config = {
-      navigationBarTitleText: '奖品列表',
+      navigationBarTitleText: '积分项目',
       navigationBarBackgroundColor: '#221817',
       navigationBarTextStyle: 'white',
+      enablePullDownRefresh: true,
 
       'usingComponents': {
         'van-divider': '../../components/vant/divider/index',
@@ -236,9 +235,25 @@ export default class PrizesIndex extends wepy.page {
         }
     }
 
-    async onLoad() {
+    async onPullDownRefresh() {
+        this.noMoreData = false;
+        this.page = 1;
+        await this.getPrizes(1, true);
+        wepy.stopPullDownRefresh();
+    }
+
+    async onReachBottom() {
+        if (this.noMoreData) {
+            return;
+        }
+        this.page = this.page + 1;
+        await this.getPrizes(this.page);
+        this.$apply();
+    }
+
+    async onShow() {
         this.user = await this.$parent.getCurrentUser(true)
-        this.getPrizes(1)
+        this.getPrizes()
     }
 }
 </script>

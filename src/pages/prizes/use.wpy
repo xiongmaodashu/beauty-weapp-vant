@@ -80,7 +80,7 @@ page {
                 NO.{{ prize.redeem_number }}
             </view>
             <view class="expired-time">
-                使用时间：{{ prize.point_prize.updated_at }}
+                使用时间：{{ prize.updated_at }}
             </view>
         </view>
 
@@ -113,7 +113,7 @@ import wxbarcode from 'wxbarcode'
 
 export default class PrizesUse extends wepy.page {
      config = {
-      navigationBarTitleText: '我的奖品',
+      navigationBarTitleText: '我的兑换',
       navigationBarBackgroundColor: '#221817',
       navigationBarTextStyle: 'white',
      }
@@ -134,7 +134,6 @@ export default class PrizesUse extends wepy.page {
         wxbarcode.barcode('barcode', this.prize.redeem_number, 680, 200);
         wxbarcode.qrcode('qrcode', this.prize.redeem_number, 600, 600)
         this.$apply();
-        console.log(this.prize)
         } catch (err) {
             console.log(err)
         wepy.showModal({
